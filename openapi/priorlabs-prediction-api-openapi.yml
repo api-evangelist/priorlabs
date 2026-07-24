@@ -1,0 +1,1231 @@
+openapi: 3.1.0
+info:
+  title: TabPFN Prediction API
+  description: 'Prior Labs TabPFN API. **Prefer [tabpfn-client](https://github.com/PriorLabs/tabpfn-client)**. Current integration surface: **`/tabpfn/*` JSON routes** (prepare uploads, fit, predict, limits). **`/v1/*` multipart routes are deprecated.** See the [Changelog](/changelog).'
+  version: 2.0.0
+  contact:
+    name: Prior Labs
+    email: hello@priorlabs.ai
+servers:
+- url: https://api.priorlabs.ai
+  description: Production TabPFN API (`/tabpfn/*` current; `/v1/*` deprecated)
+security:
+- BearerAuth: []
+tags:
+- name: Prediction
+paths:
+  /tabpfn/prepare_test_set_upload:
+    post:
+      summary: Prepare test set upload
+      description: '**Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.
+
+
+        After fit: pass `fitted_train_set_id` and `x_test_info`; receive `test_set_upload_id` and signed URLs for test features.'
+      operationId: tabpfn_prepare_test_set_upload
+      tags:
+      - Prediction
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrepareTestSetUploadRequest'
+            example:
+              fitted_train_set_id: 323e4567-e89b-12d3-a456-426614174000
+              x_test_info:
+                filename: X_test.csv
+                size_bytes: 512
+                content_hash: ghi
+      responses:
+        '200':
+          description: Test upload id and signed URLs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrepareTestSetUploadResponse'
+  /tabpfn/predict:
+    post:
+      summary: Predict (TabPFN JSON API)
+      description: '**Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.
+
+
+        JSON body after `POST /tabpfn/prepare_test_set_upload` and file upload. Fields: `test_set_upload_id`, `fitted_train_set_id` (from `/tabpfn/fit`), `task_config` (task + tabpfn config), optional `force_refit`.'
+      operationId: tabpfn_predict
+      tags:
+      - Prediction
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PredictRequest'
+            example:
+              test_set_upload_id: 223e4567-e89b-12d3-a456-426614174000
+              fitted_train_set_id: 323e4567-e89b-12d3-a456-426614174000
+              task_config:
+                task: classification
+                tabpfn_config:
+                  model_path: auto
+      responses:
+        '200':
+          description: Prediction payload + metadata.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PredictResponse'
+        '401':
+          description: 'Unauthorized — authentication required or credentials invalid.
+
+
+            **Possible causes:**
+
+            - Missing or malformed `Authorization` header
+
+            - Invalid or expired JWT token
+
+            - User not found (token references a deleted account)
+
+            - JWT decode errors (JWEDecodeError, JWTDecodeError, JWTClaimsError)
+
+
+            **Examples:**
+
+            - Missing token: `{"detail": "Not authenticated"}`
+
+            - Invalid credentials: `{"detail": "Could not validate credentials"}`'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missing_token:
+                  value:
+                    code: auth.unauthorized
+                    detail: Not authenticated
+                    retryable: false
+                    support: https://discord.com/invite/VJRuU3bSxt
+                invalid_credentials:
+                  value:
+                    code: auth.unauthorized
+                    detail: Could not validate credentials
+                    retryable: false
+                    support: https://discord.com/invite/VJRuU3bSxt
+                expired_token:
+                  value:
+                    code: auth.unauthorized
+                    detail: Invalid or expired JWT token
+                    retryable: false
+                    support: https://discord.com/invite/VJRuU3bSxt
+        '404':
+          description: Model not found — the provided model ID does not exist or has expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: error.not_found
+                detail: Fitted model with ID 123e4567-e89b-12d3-a456-426614174000 not found
+                retryable: false
+                support: https://discord.com/invite/VJRuU3bSxt
+        '422':
+          description: Validation error — one or more fields are incorrectly formatted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '429':
+          description: Quota exceeded.
+  /v1/predict:
+    post:
+      summary: Run Predictions
+      description: '**Deprecated:** Prefer `tabpfn-client` or `POST /tabpfn/predict`. See the [TabPFN-3 changelog](/changelog/tabpfn-3).
+
+
+        Run inference using a previously fitted TabPFN model. Upload your test dataset and specify the model ID from your previous `/v1/fit` call. The endpoint returns predicted probabilities or values depending on the task type.'
+      operationId: predict_v1_deprecated
+      tags:
+      - Prediction
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - data
+              - file
+              properties:
+                data:
+                  type: string
+                  description: "A JSON string defining the prediction request parameters.\n\n**Required fields:**\n- `model_id` (`str`) - Model ID from your previous `/v1/fit` call\n- `task` (`str`) - Task type: `\"classification\"` or `\"regression\"`\n\n**Optional Config Parameters:**\n- `systems` (`list[str]`) - default: `[\"preprocessing\", \"text\"]`. \n**The following preprocessing systems are supported**: \n     - `[\"preprocessing\"]` - Applies skrub preprocessing, \n   - `[\"text\"]` - Adds text embeddings for text columns. \n- `n_estimators` (`int`) - Number of estimators in the ensemble (1-10)\n- `model_path` (`str`) - Model checkpoint path from [HuggingFace](https://huggingface.co/Prior-Labs/tabpfn_3/tree/main)\n- `categorical_features_indices` (`List[int]`) - Indices of categorical features\n- `softmax_temperature` (`float`) - Temperature for softmax scaling\n- `average_before_softmax` (`bool`) - Average before applying softmax\n- `ignore_pretraining_limits` (`bool`) - Ignore pretraining limits\n- `inference_precision` (`str`) - Inference precision (\"float32\", \"float16\", \"auto\")\n- `random_state` (`int`) - Random seed for reproducibility\n- `balance_probabilities` (`bool`) - Balance class probabilities\n\n**Optional Params (output configuration):**\n- `output_type` (`str`) - Determines prediction output format\n  - Classification: `\"probas\"` (default, probabilities) or `\"preds\"` (predictions)\n  - Regression: `\"mean\"` (default, mean value) or `\"full\"` (includes quantiles, ei, pi)"
+                file:
+                  type: string
+                  format: binary
+                  description: CSV file containing the dataset to predict on.
+            examples:
+              classification:
+                summary: Classification task
+                value:
+                  data: '{"model_id": "123e4567-e89b-12d3-a456-426614174000", "task": "classification", "params": {"output_type": "probabilities"}}'
+                  file: '[binary data]'
+              regression:
+                summary: Regression task
+                value:
+                  data: '{"model_id": "123e4567-e89b-12d3-a456-426614174000", "task": "regression", "config": {"n_estimators": 8}}'
+                  file: '[binary data]'
+      responses:
+        '200':
+          description: Prediction completed successfully — returns predicted values or probabilities depending on the task.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PredictionResponse'
+              examples:
+                Classification with probabilities:
+                  summary: Classification with probabilities
+                  value:
+                    duration_seconds: 15
+                    prediction:
+                    - - 0.1
+                      - 0.9
+                    - - 0.8
+                      - 0.2
+                    task: classification
+                    params:
+                      average_before_softmax: false
+                      categorical_features_indices: null
+                      device:
+                      - cpu
+                      differentiable_input: false
+                      fit_mode: fit_preprocessors
+                      ignore_pretraining_limits: true
+                      inference_config: null
+                      inference_precision: auto
+                      memory_saving_mode: true
+                      model_path: auto
+                      n_estimators: 8
+                      n_jobs: null
+                      n_preprocessing_jobs: 4
+                      random_state: 42
+                      softmax_temperature: 0.2
+                    used_credits: 10
+                    remaining_quota: 90
+                Classification with class predictions:
+                  summary: Classification with class predictions
+                  value:
+                    duration_seconds: 12
+                    prediction:
+                    - class_1
+                    - class_0
+                    - class_1
+                    task: classification
+                    params:
+                      average_before_softmax: false
+                      categorical_features_indices: null
+                      device:
+                      - cpu
+                      differentiable_input: false
+                      fit_mode: fit_preprocessors
+                      ignore_pretraining_limits: true
+                      inference_config: null
+                      inference_precision: auto
+                      memory_saving_mode: true
+                      model_path: auto
+                      n_estimators: 8
+                      n_jobs: null
+                      n_preprocessing_jobs: 4
+                      random_state: 42
+                      softmax_temperature: 0.2
+                    used_credits: 8
+                    remaining_quota: 92
+                Regression prediction:
+                  summary: Regression prediction
+                  value:
+                    duration_seconds: 10
+                    prediction:
+                    - 1250.5
+                    - 3200.8
+                    - 980.2
+                    - 2100
+                    task: regression
+                    params:
+                      average_before_softmax: false
+                      categorical_features_indices: null
+                      device:
+                      - cpu
+                      differentiable_input: false
+                      fit_mode: fit_preprocessors
+                      ignore_pretraining_limits: true
+                      inference_config: null
+                      inference_precision: auto
+                      memory_saving_mode: true
+                      model_path: auto
+                      n_estimators: 8
+                      n_jobs: null
+                      n_preprocessing_jobs: 4
+                      random_state: 42
+                      softmax_temperature: 0.2
+                    used_credits: 5
+                    remaining_quota: 95
+        '400':
+          description: Invalid request — dataset file missing or malformed input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: error.bad_request
+                detail: You must upload a dataset `file` for prediction.
+                retryable: false
+                support: https://discord.com/invite/VJRuU3bSxt
+        '401':
+          description: 'Unauthorized — authentication required or credentials invalid.
+
+
+            **Possible causes:**
+
+            - Missing or malformed `Authorization` header
+
+            - Invalid or expired JWT token
+
+            - User not found (token references a deleted account)
+
+            - JWT decode errors'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missing_token:
+                  value:
+                    code: auth.unauthorized
+                    detail: Not authenticated
+                    retryable: false
+                    support: https://discord.com/invite/VJRuU3bSxt
+                invalid_credentials:
+                  value:
+                    code: auth.unauthorized
+                    detail: Could not validate credentials
+                    retryable: false
+                    support: https://discord.com/invite/VJRuU3bSxt
+        '403':
+          description: Forbidden — user account not verified or insufficient permissions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: auth.forbidden
+                detail: User account not verified
+                retryable: false
+                support: https://discord.com/invite/VJRuU3bSxt
+        '404':
+          description: Model not found — the provided model ID does not exist or has expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: error.not_found
+                detail: Fitted model with ID 123e4567-e89b-12d3-a456-426614174000 not found
+                retryable: false
+                support: https://discord.com/invite/VJRuU3bSxt
+        '422':
+          description: Validation error — incorrect or missing fields in the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+      x-codeSamples:
+      - lang: python
+        label: Getting Started Example
+        source: "import os, json, requests\n\n# Define your test dataset path\ntest_path = \"test.csv\"\n\n# Get your API key from the environment\napi_key = os.getenv(\"PRIORLABS_API_KEY\")\nheaders = {\"Authorization\": f\"Bearer {api_key}\"}\n\n# Create prediction payload\npayload = {\n \"task\": \"classification\",\n \"model_id\": model_id, # Use model_id from your /v1/fit call\n}\n\nfiles = {\n    \"data\": (None, json.dumps(payload), \"application/json\"),\n    \"file\": (test_path, open(test_path, \"rb\")),\n}\n\npredict_response = requests.post(\n    \"https://api.priorlabs.ai/v1/predict\",\n    headers=headers,\n    files=files,\n)\n\nprint(\"✅ Predictions:\")\nprint(json.dumps(predict_response.json(), indent=2))"
+      - lang: python
+        label: Example with All Parameters
+        source: "import os, json, requests\n\n# Define your test dataset path\ntest_path = \"test.csv\"\n\n# Get your API key from the environment\napi_key = os.getenv(\"PRIORLABS_API_KEY\")\nheaders = {\"Authorization\": f\"Bearer {api_key}\"}\n\n# Create prediction payload\npayload = {\n \"task\": \"classification\",\n \"model_id\": model_id, # Use model_id from your /v1/fit call\n\n # Optional model parameters and configuration\n \"params\": {\n     \"output_type\": \"probas\" # Use \"preds\" for hard labels\n },\n \"systems\": [\"preprocessing\", \"text\"],\n \"config\": {\n    \"n_estimators\": 4,\n    \"categorical_features_indices\": [0, 2, 5],\n    \"softmax_temperature\": 0.75,\n    \"average_before_softmax\": False,\n    \"inference_precision\": \"float32\",\n    \"random_state\": 42,\n    \"inference_config\": {\"batch_size\": 1024},\n    \"model_path\": \"tabpfn-v3-classifier-v3_default.ckpt\",\n    \"balance_probabilities\": True,\n    \"ignore_pretraining_limits\": False\n }\n}\n\nfiles = {\n    \"data\": (None, json.dumps(payload), \"application/json\"),\n    \"file\": (test_path, open(test_path, \"rb\")),\n}\n\npredict_response = requests.post(\n    \"https://api.priorlabs.ai/v1/predict\",\n    headers=headers,\n    files=files,\n)\n\nprint(\"✅ Predictions:\")\nprint(json.dumps(predict_response.json(), indent=2))"
+      deprecated: true
+components:
+  schemas:
+    RegressorConfig:
+      properties:
+        task:
+          type: string
+          const: regression
+          title: Task
+          default: regression
+        tabpfn_config:
+          $ref: '#/components/schemas/RegressorTabPFNConfig'
+        predict_params:
+          $ref: '#/components/schemas/RegressorPredictParams'
+      additionalProperties: false
+      type: object
+      title: RegressorConfig
+    ClassifierConfig:
+      properties:
+        task:
+          type: string
+          const: classification
+          title: Task
+          default: classification
+        tabpfn_config:
+          $ref: '#/components/schemas/ClassifierTabPFNConfig'
+        predict_params:
+          $ref: '#/components/schemas/ClassifierPredictParams'
+      additionalProperties: false
+      type: object
+      title: ClassifierConfig
+    ClassifierTabPFNConfig:
+      properties:
+        n_estimators:
+          anyOf:
+          - type: integer
+            maximum: 8
+            minimum: 1
+          - type: 'null'
+          title: N Estimators
+        categorical_features_indices:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+          - type: 'null'
+          title: Categorical Features Indices
+        softmax_temperature:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Softmax Temperature
+        average_before_softmax:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Average Before Softmax
+        random_state:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Random State
+        inference_config:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - $ref: '#/components/schemas/InferenceConfig'
+          - type: 'null'
+          title: Inference Config
+        ignore_pretraining_limits:
+          type: boolean
+          title: Ignore Pretraining Limits
+          default: true
+        n_preprocessing_jobs:
+          type: integer
+          title: N Preprocessing Jobs
+          default: 4
+        inference_precision:
+          type: string
+          title: Inference Precision
+          default: auto
+        fit_mode:
+          $ref: '#/components/schemas/FitMode'
+          default: fit_preprocessors
+        device:
+          anyOf:
+          - items:
+              type: string
+            type: array
+            minItems: 1
+          - type: 'null'
+          title: Device
+        memory_saving_mode:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Memory Saving Mode
+        model_path:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Model Path
+        balance_probabilities:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Balance Probabilities
+      additionalProperties: false
+      type: object
+      title: ClassifierTabPFNConfig
+    FileInfo:
+      properties:
+        format:
+          type: string
+          enum:
+          - csv
+          - parquet
+          title: Format
+        hash:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Hash
+          description: The crc32c hash of the file, used to deduplicate the file.
+        size_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Size Bytes
+          description: The size of the file in bytes, used to compute the optimal number of chunks when chunking is enabled.
+        use_chunks:
+          type: boolean
+          title: Use Chunks
+          description: Whether to split the the file into chunks and upload them in parallel.
+          default: false
+      additionalProperties: false
+      type: object
+      required:
+      - format
+      title: FileInfo
+    PreprocessorConfig:
+      properties:
+        name:
+          type: string
+          enum:
+          - per_feature
+          - power
+          - safepower
+          - power_box
+          - safepower_box
+          - quantile_uni_coarse
+          - quantile_norm_coarse
+          - quantile_uni
+          - quantile_norm
+          - quantile_uni_fine
+          - quantile_norm_fine
+          - squashing_scaler_default
+          - squashing_scaler_max10
+          - robust
+          - kdi
+          - none
+          - kdi_random_alpha
+          - kdi_uni
+          - kdi_random_alpha_uni
+          - adaptive
+          - norm_and_kdi
+          - kdi_alpha_0.3_uni
+          - kdi_alpha_0.5_uni
+          - kdi_alpha_0.8_uni
+          - kdi_alpha_1.0_uni
+          - kdi_alpha_1.2_uni
+          - kdi_alpha_1.5_uni
+          - kdi_alpha_2.0_uni
+          - kdi_alpha_3.0_uni
+          - kdi_alpha_5.0_uni
+          - kdi_alpha_0.3
+          - kdi_alpha_0.5
+          - kdi_alpha_0.8
+          - kdi_alpha_1.0
+          - kdi_alpha_1.2
+          - kdi_alpha_1.5
+          - kdi_alpha_2.0
+          - kdi_alpha_3.0
+          - kdi_alpha_5.0
+          title: Name
+        categorical_name:
+          type: string
+          enum:
+          - none
+          - numeric
+          - onehot
+          - ordinal
+          - ordinal_shuffled
+          - ordinal_very_common_categories_shuffled
+          title: Categorical Name
+          default: none
+        append_original:
+          anyOf:
+          - type: boolean
+          - type: string
+            const: auto
+          title: Append Original
+          default: false
+        max_features_per_estimator:
+          type: integer
+          title: Max Features Per Estimator
+          default: 500
+        global_transformer_name:
+          anyOf:
+          - type: string
+            enum:
+            - svd
+            - svd_quarter_components
+          - type: 'null'
+          title: Global Transformer Name
+        max_onehot_cardinality:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Max Onehot Cardinality
+        differentiable:
+          type: boolean
+          title: Differentiable
+          default: false
+      type: object
+      required:
+      - name
+      title: PreprocessorConfig
+      description: "Configuration for data preprocessing.\n\nAttributes:\n    name: Name of the preprocessor.\n    categorical_name:\n        Name of the categorical encoding method.\n        Options: \"none\", \"numeric\", \"onehot\", \"ordinal\", \"ordinal_shuffled\", \"none\".\n    append_to_original: If set to \"auto\", this is dynamically set to\n        True if the number of features is less than 500, and False otherwise.\n        Note that if set to \"auto\" and `max_features_per_estimator` is set as well,\n        this flag will become False if the number of features is larger than\n        `max_features_per_estimator / 2`. If True, the transformed features are\n        appended to the original features, however both are capped at the\n        max_features_per_estimator threshold, this should be used with caution as a\n        given model might not be configured for it.\n    max_features_per_estimator: Maximum number of features per estimator. In case\n        the dataset has more features than this, the features are subsampled for\n        each estimator independently. If append to original is set to True we can\n        still have more features.\n    global_transformer_name: Name of the global transformer to use.\n    max_onehot_cardinality: Maximum number of unique values a categorical feature\n        can have to be one-hot encoded. Features with higher cardinality are passed\n        through unchanged to ordinal encoding. If None, all categorical features\n        are one-hot encoded."
+    PrepareTestSetUploadRequest:
+      properties:
+        fitted_train_set_id:
+          type: string
+          format: uuid
+          title: Fitted Train Set Id
+        x_test_info:
+          $ref: '#/components/schemas/FileInfo'
+        force_reupload:
+          type: boolean
+          title: Force Reupload
+          description: Whether to force the upload of the file even if a file with the same hash already exists.
+          default: false
+      additionalProperties: false
+      type: object
+      required:
+      - fitted_train_set_id
+      - x_test_info
+      title: PrepareTestSetUploadRequest
+    FitMode:
+      type: string
+      enum:
+      - low_memory
+      - fit_preprocessors
+      - fit_with_cache
+      - batched
+      title: FitMode
+    ErrorResponse:
+      type: object
+      required:
+      - code
+      - detail
+      - retryable
+      - support
+      properties:
+        code:
+          type: string
+          description: Error category code (e.g., auth.unauthorized, rate.limit.exceeded)
+          example: auth.unauthorized
+        detail:
+          type: string
+          description: Human-readable error message describing what went wrong.
+          example: Invalid authentication credentials
+        retryable:
+          type: boolean
+          description: Indicates whether the request can be retried.
+          example: false
+        support:
+          type: string
+          description: URL to get support for this error.
+          example: https://discord.com/invite/VJRuU3bSxt
+      example:
+        code: auth.unauthorized
+        detail: Invalid authentication credentials
+        retryable: false
+        support: https://discord.com/invite/VJRuU3bSxt
+    ClassifierMetadata:
+      properties:
+        test_set_num_rows:
+          type: integer
+          title: Test Set Num Rows
+        test_set_num_cols:
+          type: integer
+          title: Test Set Num Cols
+        task:
+          type: string
+          const: classification
+          title: Task
+          default: classification
+        package_version:
+          type: string
+          title: Package Version
+        tabpfn_config:
+          $ref: '#/components/schemas/ClassifierTabPFNConfig'
+      additionalProperties: false
+      type: object
+      required:
+      - test_set_num_rows
+      - test_set_num_cols
+      - package_version
+      - tabpfn_config
+      title: ClassifierMetadata
+    PredictionResponse:
+      type: object
+      required:
+      - duration_seconds
+      - prediction
+      - task
+      - used_credits
+      - remaining_quota
+      properties:
+        duration_seconds:
+          type: integer
+          description: Time taken (in seconds) to complete the prediction.
+        prediction:
+          description: 'The prediction output. Format depends on task and output_type:
+
+            - **Regression**: List of floats (e.g., `[1250.5, 3200.8, 980.2]`)
+
+            - **Classification with `output_type: probas`**: List of lists (probabilities) (e.g., `[[0.1, 0.9], [0.8, 0.2]]`)
+
+            - **Classification with `output_type: preds`**: List of classes (e.g., `["class_0", "class_1"]`)'
+          oneOf:
+          - type: array
+            items:
+              type: number
+            description: Regression predictions or classification probabilities
+          - type: array
+            items:
+              type: array
+              items:
+                type: number
+            description: Classification probabilities (list of lists)
+          - type: array
+            items:
+              type: string
+            description: Classification predictions (list of class names)
+        task:
+          $ref: '#/components/schemas/PredictionTask'
+        params:
+          type: object
+          description: The inference parameters that were used during prediction.
+          properties:
+            average_before_softmax:
+              type: boolean
+              description: Whether to average before applying softmax.
+            categorical_features_indices:
+              type: array
+              items:
+                type: integer
+              nullable: true
+              description: Indices of categorical features.
+            ignore_pretraining_limits:
+              type: boolean
+              description: Whether to ignore pretraining limits.
+            inference_config:
+              type: object
+              nullable: true
+              description: Additional inference configuration parameters.
+            inference_precision:
+              type: string
+              description: Inference precision (e.g., "auto", "float32", "float16").
+            model_path:
+              type: string
+              description: Model checkpoint path used for inference.
+            n_estimators:
+              type: integer
+              description: Number of ensemble estimators used.
+            n_preprocessing_jobs:
+              type: integer
+              description: Number of preprocessing jobs.
+            random_state:
+              type: integer
+              nullable: true
+              description: Random seed used for reproducibility.
+            softmax_temperature:
+              type: number
+              description: Softmax temperature parameter used.
+        used_credits:
+          type: integer
+          description: The number of credits consumed by this API call.
+        remaining_quota:
+          type: integer
+          description: Your remaining credit balance after this request.
+      example:
+        duration_seconds: 15
+        prediction:
+        - 0.1
+        - 0.9
+        - 0.3
+        - 0.7
+        task: classification
+        params:
+          average_before_softmax: false
+          categorical_features_indices: null
+          ignore_pretraining_limits: true
+          inference_config: null
+          inference_precision: auto
+          model_path: auto
+          n_estimators: 8
+          n_preprocessing_jobs: 4
+          random_state: 42
+          softmax_temperature: 0.2
+        used_credits: 10
+        remaining_quota: 90
+    PredictionTask:
+      type: string
+      enum:
+      - classification
+      - regression
+      description: Specifies the type of task to perform — either classification or regression.
+    FileUploadInfo:
+      properties:
+        signed_urls:
+          items:
+            type: string
+          type: array
+          minItems: 1
+          title: Signed Urls
+        expires_at:
+          type: number
+          title: Expires At
+        required_headers:
+          additionalProperties:
+            type: string
+          type: object
+          title: Required Headers
+      additionalProperties: false
+      type: object
+      required:
+      - signed_urls
+      - expires_at
+      - required_headers
+      title: FileUploadInfo
+    ClassifierPredictParams:
+      properties:
+        output_type:
+          $ref: '#/components/schemas/ClassifierOutputType'
+          default: probas
+      additionalProperties: false
+      type: object
+      title: ClassifierPredictParams
+    PredictResponse:
+      properties:
+        prediction:
+          anyOf:
+          - items: {}
+            type: array
+          - items:
+              items: {}
+              type: array
+            type: array
+          - additionalProperties:
+              anyOf:
+              - items: {}
+                type: array
+              - items:
+                  items: {}
+                  type: array
+                type: array
+            type: object
+          title: Prediction
+        metadata:
+          oneOf:
+          - $ref: '#/components/schemas/ClassifierMetadata'
+          - $ref: '#/components/schemas/RegressorMetadata'
+          title: Metadata
+          discriminator:
+            propertyName: task
+            mapping:
+              classification: '#/components/schemas/ClassifierMetadata'
+              regression: '#/components/schemas/RegressorMetadata'
+      additionalProperties: false
+      type: object
+      required:
+      - prediction
+      - metadata
+      title: PredictResponse
+    RegressorTabPFNConfig:
+      properties:
+        n_estimators:
+          anyOf:
+          - type: integer
+            maximum: 8
+            minimum: 1
+          - type: 'null'
+          title: N Estimators
+        categorical_features_indices:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+          - type: 'null'
+          title: Categorical Features Indices
+        softmax_temperature:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Softmax Temperature
+        average_before_softmax:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Average Before Softmax
+        random_state:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Random State
+        inference_config:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - $ref: '#/components/schemas/InferenceConfig'
+          - type: 'null'
+          title: Inference Config
+        ignore_pretraining_limits:
+          type: boolean
+          title: Ignore Pretraining Limits
+          default: true
+        n_preprocessing_jobs:
+          type: integer
+          title: N Preprocessing Jobs
+          default: 4
+        inference_precision:
+          type: string
+          title: Inference Precision
+          default: auto
+        fit_mode:
+          $ref: '#/components/schemas/FitMode'
+          default: fit_preprocessors
+        device:
+          anyOf:
+          - items:
+              type: string
+            type: array
+            minItems: 1
+          - type: 'null'
+          title: Device
+        memory_saving_mode:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Memory Saving Mode
+        model_path:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Model Path
+      additionalProperties: false
+      type: object
+      title: RegressorTabPFNConfig
+    ValidationError:
+      type: object
+      required:
+      - code
+      - detail
+      - errors
+      - retryable
+      - support
+      properties:
+        code:
+          type: string
+          description: Error category code for validation errors
+          example: validation.failed
+        detail:
+          type: string
+          description: Human-readable validation error message
+          example: Validation error for FitRequest
+        errors:
+          type: array
+          description: Array of field-level validation errors
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Field name where the error occurred
+                example: task
+              message:
+                type: string
+                description: Error message for this field
+                example: field required
+        retryable:
+          type: boolean
+          description: Indicates whether the request can be retried
+          example: false
+        support:
+          type: string
+          description: URL to get support for this error
+          example: https://discord.com/invite/VJRuU3bSxt
+      example:
+        code: validation.failed
+        detail: Validation error for FitRequest
+        errors:
+        - field: task
+          message: field required
+        - field: systems
+          message: 'Invalid system: invalid_system. Must be one of: [''preprocessing'', ''text'']'
+        retryable: false
+        support: https://discord.com/invite/VJRuU3bSxt
+    PredictRequest:
+      properties:
+        test_set_upload_id:
+          type: string
+          format: uuid
+          title: Test Set Upload Id
+        fitted_train_set_id:
+          type: string
+          format: uuid
+          title: Fitted Train Set Id
+        task_config:
+          oneOf:
+          - $ref: '#/components/schemas/ClassifierConfig'
+          - $ref: '#/components/schemas/RegressorConfig'
+          title: Task Config
+          discriminator:
+            propertyName: task
+            mapping:
+              classification: '#/components/schemas/ClassifierConfig'
+              regression: '#/components/schemas/RegressorConfig'
+        force_refit:
+          type: boolean
+          title: Force Refit
+          description: Whether to force the fitting of the test set even if a fittedtest set and transform states already exist.
+          default: false
+      additionalProperties: false
+      type: object
+      required:
+      - test_set_upload_id
+      - fitted_train_set_id
+      - task_config
+      title: PredictRequest
+    RegressorMetadata:
+      properties:
+        test_set_num_rows:
+          type: integer
+          title: Test Set Num Rows
+        test_set_num_cols:
+          type: integer
+          title: Test Set Num Cols
+        task:
+          type: string
+          const: regression
+          title: Task
+          default: regression
+        package_version:
+          type: string
+          title: Package Version
+        tabpfn_config:
+          $ref: '#/components/schemas/RegressorTabPFNConfig'
+      additionalProperties: false
+      type: object
+      required:
+      - test_set_num_rows
+      - test_set_num_cols
+      - package_version
+      - tabpfn_config
+      title: RegressorMetadata
+    InferenceConfig:
+      properties:
+        PREPROCESS_TRANSFORMS:
+          items:
+            $ref: '#/components/schemas/PreprocessorConfig'
+          type: array
+          title: Preprocess Transforms
+        MAX_UNIQUE_FOR_CATEGORICAL_FEATURES:
+          type: integer
+          title: Max Unique For Categorical Features
+          default: 30
+        MIN_UNIQUE_FOR_NUMERICAL_FEATURES:
+          type: integer
+          title: Min Unique For Numerical Features
+          default: 4
+        MIN_NUMBER_SAMPLES_FOR_CATEGORICAL_INFERENCE:
+          type: integer
+          title: Min Number Samples For Categorical Inference
+          default: 100
+        OUTLIER_REMOVAL_STD:
+          anyOf:
+          - type: number
+          - type: string
+            const: auto
+          - type: 'null'
+          title: Outlier Removal Std
+          default: auto
+        FEATURE_SHIFT_METHOD:
+          anyOf:
+          - type: string
+            enum:
+            - shuffle
+            - rotate
+          - type: 'null'
+          title: Feature Shift Method
+          default: shuffle
+        CLASS_SHIFT_METHOD:
+          anyOf:
+          - type: string
+            enum:
+            - shuffle
+            - rotate
+          - type: 'null'
+          title: Class Shift Method
+          default: shuffle
+        FINGERPRINT_FEATURE:
+          type: boolean
+          title: Fingerprint Feature
+          default: true
+        POLYNOMIAL_FEATURES:
+          anyOf:
+          - type: string
+            enum:
+            - 'no'
+            - all
+          - type: integer
+          title: Polynomial Features
+          default: 'no'
+        SUBSAMPLE_SAMPLES:
+          anyOf:
+          - type: integer
+          - type: number
+          - items: {}
+            type: array
+          - type: 'null'
+          title: Subsample Samples
+        ENABLE_GPU_PREPROCESSING:
+          type: boolean
+          title: Enable Gpu Preprocessing
+          default: false
+        FEATURE_SUBSAMPLING_METHOD:
+          type: string
+          enum:
+          - balanced
+          - random
+          - constant_and_balanced
+          - gini_feature_importance
+          - auto
+          title: Feature Subsampling Method
+          default: balanced
+        FEATURE_SUBSAMPLING_CONSTANT_FEATURE_COUNT:
+          type: integer
+          title: Feature Subsampling Constant Feature Count
+          default: 50
+        FEATURE_SUBSAMPLING_IMPORTANCE_TOP_K_COUNT:
+          anyOf:
+          - type: integer
+          - type: number
+          - type: string
+            const: auto
+          title: Feature Subsampling Importance Top K Count
+          default: auto
+        REGRESSION_Y_PREPROCESS_TRANSFORMS:
+          items:
+            anyOf:
+            - type: string
+            - type: 'null'
+          type: array
+          title: Regression Y Preprocess Transforms
+          default:
+          - null
+          - safepower
+        USE_SKLEARN_16_DECIMAL_PRECISION:
+          type: boolean
+          title: Use Sklearn 16 Decimal Precision
+          default: false
+        MAX_NUMBER_OF_CLASSES:
+          type: integer
+          title: Max Number Of Classes
+          default: 10
+        MAX_NUMBER_OF_FEATURES:
+          type: integer
+          title: Max Number Of Features
+          default: 500
+        MAX_NUMBER_OF_SAMPLES:
+          type: integer
+          title: Max Number Of Samples
+          default: 10000
+        FIX_NAN_BORDERS_AFTER_TARGET_TRANSFORM:
+          type: boolean
+          title: Fix Nan Borders After Target Transform
+          default: true
+        _REGRESSION_DEFAULT_OUTLIER_REMOVAL_STD:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Regression Default Outlier Removal Std
+        _CLASSIFICATION_DEFAULT_OUTLIER_REMOVAL_STD:
+          type: number
+          title: Classification Default Outlier Removal Std
+          default: 12
+      additionalProperties: false
+      type: object
+      required:
+      - PREPROCESS_TRANSFORMS
+      title: InferenceConfig
+      description: 'Additional configuration options for inference.
+
+
+        Several configuration options for inference are exposed in the `TabPFNClassifier`
+
+        and `TabPFNRegressor` interfaces. The options in this class are more advanced and
+
+        not expected to be changed by the (standard) user.
+
+
+        Several of the preprocessing options are supported by our code for efficiency
+
+        reasons (to avoid loading TabPFN multiple times). However, these can also be
+
+        applied outside of the model interface.
+
+
+        This class must be serializable as it is peristed in the model checkpoints.
+
+
+        Do not edit the default values in this class, as this can affect the backwards
+
+        compatibility of the model checkpoints. Instead, edit `get_default()`.'
+    RegressorOutputType:
+      type: string
+      enum:
+      - mean
+      - median
+      - mode
+      - quantiles
+      - full
+      - main
+      title: RegressorOutputType
+    RegressorPredictParams:
+      properties:
+        output_type:
+          $ref: '#/components/schemas/RegressorOutputType'
+          default: mean
+        quantiles:
+          anyOf:
+          - items:
+              type: number
+              maximum: 1
+              minimum: 0
+            type: array
+          - type: 'null'
+          title: Quantiles
+      additionalProperties: false
+      type: object
+      title: RegressorPredictParams
+    PrepareTestSetUploadResponse:
+      properties:
+        test_set_upload_id:
+          type: string
+          format: uuid
+          title: Test Set Upload Id
+        x_test_info:
+          $ref: '#/components/schemas/FileUploadInfo'
+      additionalProperties: false
+      type: object
+      required:
+      - test_set_upload_id
+      - x_test_info
+      title: PrepareTestSetUploadResponse
+    ClassifierOutputType:
+      type: string
+      enum:
+      - probas
+      - preds
+      title: ClassifierOutputType
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Bearer token for authentication, obtained after signing up and generating an API key.

@@ -1,0 +1,736 @@
+openapi: 3.1.0
+info:
+  title: TabPFN Prediction Training API
+  description: 'Prior Labs TabPFN API. **Prefer [tabpfn-client](https://github.com/PriorLabs/tabpfn-client)**. Current integration surface: **`/tabpfn/*` JSON routes** (prepare uploads, fit, predict, limits). **`/v1/*` multipart routes are deprecated.** See the [Changelog](/changelog).'
+  version: 2.0.0
+  contact:
+    name: Prior Labs
+    email: hello@priorlabs.ai
+servers:
+- url: https://api.priorlabs.ai
+  description: Production TabPFN API (`/tabpfn/*` current; `/v1/*` deprecated)
+security:
+- BearerAuth: []
+tags:
+- name: Training
+paths:
+  /tabpfn/prepare_train_set_upload:
+    post:
+      summary: Prepare train set upload
+      description: '**Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.
+
+
+        First step for TabPFN v2 flow: pass `x_train_info` / `y_train_info` metadata (name, size, hash); receive `train_set_upload_id` and signed upload URLs.'
+      operationId: tabpfn_prepare_train_set_upload
+      tags:
+      - Training
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrepareTrainSetUploadRequest'
+            example:
+              x_train_info:
+                filename: X_train.csv
+                size_bytes: 1024
+                content_hash: abc
+              y_train_info:
+                filename: y_train.csv
+                size_bytes: 64
+                content_hash: def
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrepareTrainSetUploadResponse'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DuplicateTrainSetErrorResponse'
+          description: Conflict
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Default Response
+  /tabpfn/get_model_limits:
+    get:
+      summary: Get model limits
+      description: '**Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.
+
+
+        Returns `default_model_version`, per-version `model_limits` (rows, cells, classes, cols), and `dataset_max_size_bytes`. The client calls this to size-check before upload.'
+      operationId: tabpfn_get_model_limits
+      tags:
+      - Training
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Limits envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetModelLimitsResponse'
+        '401':
+          description: 'Unauthorized — authentication required or credentials invalid.
+
+
+            **Possible causes:**
+
+            - Missing or malformed `Authorization` header
+
+            - Invalid or expired JWT token
+
+            - User not found (token references a deleted account)
+
+            - JWT decode errors (JWEDecodeError, JWTDecodeError, JWTClaimsError)
+
+
+            **Examples:**
+
+            - Missing token: `{"detail": "Not authenticated"}`
+
+            - Invalid credentials: `{"detail": "Could not validate credentials"}`'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missing_token:
+                  value:
+                    code: auth.unauthorized
+                    detail: Not authenticated
+                    retryable: false
+                    support: https://discord.com/invite/VJRuU3bSxt
+                invalid_credentials:
+                  value:
+                    code: auth.unauthorized
+                    detail: Could not validate credentials
+                    retryable: false
+                    support: https://discord.com/invite/VJRuU3bSxt
+                expired_token:
+                  value:
+                    code: auth.unauthorized
+                    detail: Invalid or expired JWT token
+                    retryable: false
+                    support: https://discord.com/invite/VJRuU3bSxt
+  /tabpfn/fit:
+    post:
+      summary: Fit (TabPFN JSON API)
+      description: '**Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.
+
+
+        JSON body after you upload train files via `POST /tabpfn/prepare_train_set_upload` and PUT the returned signed URLs. Returns `fitted_train_set_id`. Long fits may stream JSON with leading keepalive whitespace; see the [TabPFN-3 changelog](/changelog/tabpfn-3).
+
+
+        Key fields: `train_set_upload_id` (UUID), `task` (`classification` | `regression`), `tabpfn_systems`, optional `tabpfn_config`, `thinking_effort` (`medium` | `high` or omit), `thinking_timeout_s`, `thinking_effort_metric`, `force_refit`.'
+      operationId: tabpfn_fit
+      tags:
+      - Training
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FitRequest'
+            example:
+              train_set_upload_id: 123e4567-e89b-12d3-a456-426614174000
+              task: classification
+              tabpfn_systems:
+              - preprocessing
+              - text
+              thinking_effort: medium
+      responses:
+        '200':
+          description: Fitted train set id (JSON; may be streamed with leading whitespace on long fits).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TabpfnFitResponse'
+        '401':
+          description: 'Unauthorized — authentication required or credentials invalid.
+
+
+            **Possible causes:**
+
+            - Missing or malformed `Authorization` header
+
+            - Invalid or expired JWT token
+
+            - User not found (token references a deleted account)
+
+            - JWT decode errors (JWEDecodeError, JWTDecodeError, JWTClaimsError)
+
+
+            **Examples:**
+
+            - Missing token: `{"detail": "Not authenticated"}`
+
+            - Invalid credentials: `{"detail": "Could not validate credentials"}`'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missing_token:
+                  value:
+                    code: auth.unauthorized
+                    detail: Not authenticated
+                    retryable: false
+                    support: https://discord.com/invite/VJRuU3bSxt
+                invalid_credentials:
+                  value:
+                    code: auth.unauthorized
+                    detail: Could not validate credentials
+                    retryable: false
+                    support: https://discord.com/invite/VJRuU3bSxt
+                expired_token:
+                  value:
+                    code: auth.unauthorized
+                    detail: Invalid or expired JWT token
+                    retryable: false
+                    support: https://discord.com/invite/VJRuU3bSxt
+        '404':
+          description: Model not found — the provided model ID does not exist or has expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: error.not_found
+                detail: Fitted model with ID 123e4567-e89b-12d3-a456-426614174000 not found
+                retryable: false
+                support: https://discord.com/invite/VJRuU3bSxt
+        '422':
+          description: Validation error — one or more fields are incorrectly formatted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '429':
+          description: Quota exceeded (predict pre-check or thinking-fit monthly limit).
+  /v1/fit:
+    post:
+      summary: Fit a Model
+      description: '**Deprecated:** Prefer the TabPFN client (`tabpfn-client`) or `POST /tabpfn/fit` after preparing uploads. This multipart `/v1/fit` surface is legacy. See the [TabPFN-3 changelog](/changelog/tabpfn-3).
+
+
+        Uploads and fits a TabPFN model on your training data. The API automatically handles preprocessing and stores a reference to your trained context (not the model weights). You can use either a single dataset file (with the target column included) or separate feature and label files.'
+      operationId: fit_v1_deprecated
+      tags:
+      - Training
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - data
+              properties:
+                data:
+                  type: string
+                  description: "A JSON string defining the training configuration. \n\n**Supported Systems**: \n- `[\"preprocessing\"]` - Applies skrub preprocessing, \n- `[\"text\"]` - Adds text embeddings for text columns. \n\n**Default**: `[\"preprocessing\", \"text\"]`. \n\n**Supported Config Parameters**:\n- `n_estimators` (`int`, 1-10) - Number of ensemble estimators, \n- `softmax_temperature` (`float`) - Temperature for softmax scaling, \n- `average_before_softmax` (`bool`) - Average before softmax,\n- `ignore_pretraining_limits` (`bool`) - Ignore pretraining limits, \n- `random_state` (`int`) - Random seed for reproducibility."
+                dataset_file:
+                  type: string
+                  format: binary
+                  description: '**Option 1:** CSV file containing both features (`X_train`) and labels (`y_train`). Use this when you have **all data in a single file**.'
+                features_file:
+                  type: string
+                  format: binary
+                  description: '**Option 2:**: CSV file containing only feature columns (`X_train`). Must be used together with `labels_file`.'
+                labels_file:
+                  type: string
+                  format: binary
+                  description: '**Option 2:** CSV file containing only the target/label column (`y_train`). Must be used together with `features_file`.'
+              oneOf:
+              - required:
+                - data
+                - dataset_file
+              - required:
+                - data
+                - features_file
+                - labels_file
+            examples:
+              single_dataset:
+                summary: Single CSV file (features + target)
+                value:
+                  data: '{"task": "classification", "schema": {"target": "churn"}}'
+                  dataset_file: '[binary data]'
+              separate_files:
+                summary: Separate features and labels files
+                value:
+                  data: '{"task": "regression", "schema": {"target": "price"}}'
+                  features_file: '[binary data]'
+                  labels_file: '[binary data]'
+      responses:
+        '200':
+          description: Model fitted successfully — returns a model ID for later prediction calls.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FitResponse'
+              example:
+                model_id: 123e4567-e89b-12d3-a456-426614174000
+                task: classification
+        '400':
+          description: Invalid request — missing data or malformed input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: error.bad_request
+                detail: Invalid request data
+                retryable: false
+                support: https://discord.com/invite/VJRuU3bSxt
+        '401':
+          description: 'Unauthorized — authentication required or credentials invalid.
+
+
+            **Possible causes:**
+
+            - Missing or malformed `Authorization` header
+
+            - Invalid or expired JWT token
+
+            - User not found (token references a deleted account)
+
+            - JWT decode errors (JWEDecodeError, JWTDecodeError, JWTClaimsError)
+
+
+            **Examples:**
+
+            - Missing token: `{"detail": "Not authenticated"}`
+
+            - Invalid credentials: `{"detail": "Could not validate credentials"}`'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missing_token:
+                  value:
+                    code: auth.unauthorized
+                    detail: Not authenticated
+                    retryable: false
+                    support: https://discord.com/invite/VJRuU3bSxt
+                invalid_credentials:
+                  value:
+                    code: auth.unauthorized
+                    detail: Could not validate credentials
+                    retryable: false
+                    support: https://discord.com/invite/VJRuU3bSxt
+                expired_token:
+                  value:
+                    code: auth.unauthorized
+                    detail: Invalid or expired JWT token
+                    retryable: false
+                    support: https://discord.com/invite/VJRuU3bSxt
+        '403':
+          description: 'Forbidden — user account not verified or insufficient permissions.
+
+
+            **Possible causes:**
+
+            - Valid token for an unverified user
+
+            - Account not yet verified via email
+
+
+            **Example response:**
+
+            `{"code": "auth.forbidden", "detail": "User account not verified", "retryable": false, "support": "https://discord.com/invite/VJRuU3bSxt"}`'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: auth.forbidden
+                detail: User account not verified
+                retryable: false
+                support: https://discord.com/invite/VJRuU3bSxt
+        '422':
+          description: Validation error — one or more fields are incorrectly formatted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+      x-codeSamples:
+      - lang: python
+        label: Single CSV upload
+        source: "import os, json, requests\n\n# Define your dataset path\ntrain_path = \"train.csv\"\n\n# Get your API key from the environment\napi_key = os.getenv(\"PRIORLABS_API_KEY\")\nheaders = {\"Authorization\": f\"Bearer {api_key}\"}\n\n# Upload your training dataset to /v1/fit\npayload = {\n     \"task\": \"classification\",\n     \"schema\": {\n         \"target\": \"churn\",\n         \"description\": \"Customer churn dataset\"\n     }\n}\n\nfiles = {\n     \"data\": (None, json.dumps(payload), \"application/json\"),\n     \"dataset_file\": (train_path, open(train_path, \"rb\")),\n}\n\nfit_response = requests.post(\n     \"https://api.priorlabs.ai/v1/fit\",\n     headers=headers,\n     files=files,\n)\n\nmodel_id = fit_response.json().get(\"model_id\")\nprint(f\"✅ Model trained: {model_id}\")"
+      - lang: python
+        label: Separate features + labels
+        source: "import os, json, requests\n\n# Define your file paths\nX_train_path = \"X_train.csv\"  # features only\ny_train_path = \"y_train.csv\"  # labels only\n\n# Get your API key from the environment\napi_key = os.getenv(\"PRIORLABS_API_KEY\")\nheaders = {\"Authorization\": f\"Bearer {api_key}\"}\n\n# Upload your training dataset with separate files\npayload = {\n    \"task\": \"regression\",\n    \"schema\": {\n        \"target\": \"price\",\n        \"description\": \"House price prediction dataset\"\n    }\n}\n\nfiles = {\n    \"data\": (None, json.dumps(payload), \"application/json\"),\n    \"features_file\": (X_train_path, open(X_train_path, \"rb\")),\n    \"labels_file\": (y_train_path, open(y_train_path, \"rb\")),\n}\n\nfit_response = requests.post(\n    \"https://api.priorlabs.ai/v1/fit\",\n    headers=headers,\n    files=files,\n)\n\nmodel_id = fit_response.json().get(\"model_id\")\nprint(f\"✅ Model trained: {model_id}\")"
+      deprecated: true
+components:
+  schemas:
+    ModelLimit:
+      properties:
+        train_set_max_rows:
+          type: integer
+          title: Train Set Max Rows
+        train_set_max_cells:
+          type: integer
+          title: Train Set Max Cells
+        test_set_max_rows:
+          type: integer
+          title: Test Set Max Rows
+        max_classes:
+          type: integer
+          title: Max Classes
+        max_cols:
+          type: integer
+          title: Max Cols
+          default: 2000
+        test_set_max_rows_w_full_regression_output:
+          type: integer
+          title: Test Set Max Rows W Full Regression Output
+          default: 400
+        test_set_max_cells:
+          type: integer
+          title: Test Set Max Cells
+          readOnly: true
+      type: object
+      required:
+      - train_set_max_rows
+      - train_set_max_cells
+      - test_set_max_rows
+      - max_classes
+      - test_set_max_cells
+      title: ModelLimit
+    PredictionTask:
+      type: string
+      enum:
+      - classification
+      - regression
+      description: Specifies the type of task to perform — either classification or regression.
+    ValidationError:
+      type: object
+      required:
+      - code
+      - detail
+      - errors
+      - retryable
+      - support
+      properties:
+        code:
+          type: string
+          description: Error category code for validation errors
+          example: validation.failed
+        detail:
+          type: string
+          description: Human-readable validation error message
+          example: Validation error for FitRequest
+        errors:
+          type: array
+          description: Array of field-level validation errors
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Field name where the error occurred
+                example: task
+              message:
+                type: string
+                description: Error message for this field
+                example: field required
+        retryable:
+          type: boolean
+          description: Indicates whether the request can be retried
+          example: false
+        support:
+          type: string
+          description: URL to get support for this error
+          example: https://discord.com/invite/VJRuU3bSxt
+      example:
+        code: validation.failed
+        detail: Validation error for FitRequest
+        errors:
+        - field: task
+          message: field required
+        - field: systems
+          message: 'Invalid system: invalid_system. Must be one of: [''preprocessing'', ''text'']'
+        retryable: false
+        support: https://discord.com/invite/VJRuU3bSxt
+    PrepareTrainSetUploadRequest:
+      properties:
+        x_train_info:
+          $ref: '#/components/schemas/FileInfo'
+        y_train_info:
+          $ref: '#/components/schemas/FileInfo'
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        force_reupload:
+          type: boolean
+          title: Force Reupload
+          description: Whether to force the upload of the file even if a file with the same hash already exists.
+          default: false
+      additionalProperties: false
+      type: object
+      required:
+      - x_train_info
+      - y_train_info
+      title: PrepareTrainSetUploadRequest
+    FileUploadInfo:
+      properties:
+        signed_urls:
+          items:
+            type: string
+          type: array
+          minItems: 1
+          title: Signed Urls
+        expires_at:
+          type: number
+          title: Expires At
+        required_headers:
+          additionalProperties:
+            type: string
+          type: object
+          title: Required Headers
+      additionalProperties: false
+      type: object
+      required:
+      - signed_urls
+      - expires_at
+      - required_headers
+      title: FileUploadInfo
+    FitRequest:
+      properties:
+        train_set_upload_id:
+          type: string
+          format: uuid
+          title: Train Set Upload Id
+        task:
+          $ref: '#/components/schemas/PredictionTask'
+        tabpfn_systems:
+          items:
+            type: string
+            enum:
+            - preprocessing
+            - text
+            - thinking
+          type: array
+          title: Tabpfn Systems
+          default:
+          - preprocessing
+          - text
+        tabpfn_config:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Tabpfn Config
+        thinking_effort:
+          anyOf:
+          - type: string
+            enum:
+            - medium
+            - high
+          - type: 'null'
+          title: Thinking Effort
+        thinking_timeout_s:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Thinking Timeout S
+        thinking_effort_metric:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Thinking Effort Metric
+        force_refit:
+          type: boolean
+          title: Force Refit
+          description: Whether to force the fitting of the train set even if a fittedtrain set and transform states already exist.
+          default: false
+      additionalProperties: false
+      type: object
+      required:
+      - train_set_upload_id
+      - task
+      title: FitRequest
+    FitResponse:
+      type: object
+      required:
+      - model_id
+      - task
+      properties:
+        model_id:
+          type: string
+          format: uuid
+          description: Unique identifier for the fitted model (used for prediction calls).
+        task:
+          $ref: '#/components/schemas/PredictionTask'
+      example:
+        model_id: 123e4567-e89b-12d3-a456-426614174000
+        task: classification
+    ErrorResponse:
+      type: object
+      required:
+      - code
+      - detail
+      - retryable
+      - support
+      properties:
+        code:
+          type: string
+          description: Error category code (e.g., auth.unauthorized, rate.limit.exceeded)
+          example: auth.unauthorized
+        detail:
+          type: string
+          description: Human-readable error message describing what went wrong.
+          example: Invalid authentication credentials
+        retryable:
+          type: boolean
+          description: Indicates whether the request can be retried.
+          example: false
+        support:
+          type: string
+          description: URL to get support for this error.
+          example: https://discord.com/invite/VJRuU3bSxt
+      example:
+        code: auth.unauthorized
+        detail: Invalid authentication credentials
+        retryable: false
+        support: https://discord.com/invite/VJRuU3bSxt
+    FileInfo:
+      properties:
+        format:
+          type: string
+          enum:
+          - csv
+          - parquet
+          title: Format
+        hash:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Hash
+          description: The crc32c hash of the file, used to deduplicate the file.
+        size_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Size Bytes
+          description: The size of the file in bytes, used to compute the optimal number of chunks when chunking is enabled.
+        use_chunks:
+          type: boolean
+          title: Use Chunks
+          description: Whether to split the the file into chunks and upload them in parallel.
+          default: false
+      additionalProperties: false
+      type: object
+      required:
+      - format
+      title: FileInfo
+    GetModelLimitsResponse:
+      properties:
+        default_model_version:
+          $ref: '#/components/schemas/ModelVersion'
+        max_model_limit:
+          $ref: '#/components/schemas/ModelLimit'
+        model_limits:
+          additionalProperties:
+            $ref: '#/components/schemas/ModelLimit'
+          propertyNames:
+            $ref: '#/components/schemas/ModelVersion'
+          type: object
+          title: Model Limits
+        dataset_max_size_bytes:
+          type: integer
+          title: Dataset Max Size Bytes
+      additionalProperties: false
+      type: object
+      required:
+      - default_model_version
+      - max_model_limit
+      - model_limits
+      - dataset_max_size_bytes
+      title: GetModelLimitsResponse
+    TabpfnFitResponse:
+      type: object
+      required:
+      - fitted_train_set_id
+      properties:
+        fitted_train_set_id:
+          type: string
+          format: uuid
+    PrepareTrainSetUploadResponse:
+      properties:
+        train_set_upload_id:
+          type: string
+          format: uuid
+          title: Train Set Upload Id
+        x_train_info:
+          $ref: '#/components/schemas/FileUploadInfo'
+        y_train_info:
+          $ref: '#/components/schemas/FileUploadInfo'
+      additionalProperties: false
+      type: object
+      required:
+      - train_set_upload_id
+      - x_train_info
+      - y_train_info
+      title: PrepareTrainSetUploadResponse
+    DuplicateTrainSetErrorResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+        error_code:
+          type: string
+          title: Error Code
+          default: DUPLICATE_TRAIN_SET_UPLOAD
+        trace_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Trace Id
+        detail:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Detail
+        train_set_upload_id:
+          type: string
+          format: uuid
+          title: Train Set Upload Id
+      additionalProperties: false
+      type: object
+      required:
+      - message
+      - train_set_upload_id
+      title: DuplicateTrainSetErrorResponse
+    ModelVersion:
+      type: string
+      enum:
+      - v2
+      - v2.5
+      - v2.6
+      - v3
+      title: ModelVersion
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Bearer token for authentication, obtained after signing up and generating an API key.
