@@ -1,0 +1,25 @@
+generated: '2026-07-20'
+method: derived
+source: openapi/priorlabs-openapi-original.json
+standards:
+- id: openapi-3.1
+  conforms: true
+  evidence: openapi 3.1.0 spec published at docs.priorlabs.ai/api-reference/openapi.json
+- id: http-bearer-jwt
+  conforms: true
+  evidence: securitySchemes BearerAuth type http scheme bearer bearerFormat JWT
+- id: oauth2
+  conforms: false
+  evidence: no oauth2 security scheme in the REST spec (the MCP server offers OAuth, the REST API is bearer API key)
+- id: rfc9457-problem-details
+  conforms: false
+  evidence: errors use a custom ErrorResponse envelope (code/detail/retryable/support), not application/problem+json
+- id: rest-rpc
+  conforms: true
+  evidence: RPC-style resource operations (fit/predict/upload) over HTTPS
+- id: mcp
+  conforms: true
+  evidence: published Model Context Protocol server at api.priorlabs.ai/mcp/server
+- id: rate-limit-signaling
+  conforms: true
+  evidence: HTTP 429 with reset time on token-pool / thinking-fit quota exhaustion

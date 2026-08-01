@@ -1,0 +1,32 @@
+generated: '2026-07-20'
+method: searched
+source: https://docs.priorlabs.ai/api-reference/getting-started
+authentication:
+  style: bearer
+  header: Authorization
+  format: Bearer <api_key>  # JWT
+  docs: https://docs.priorlabs.ai/api-reference/getting-started
+  ref: authentication/priorlabs-authentication.yml
+idempotency:
+  supported: false
+  note: No idempotency-key header is documented; fit/predict are stateful jobs keyed by uploaded dataset ids.
+pagination:
+  supported: false
+  note: Endpoints are RPC-style (fit/predict/upload); no list/collection pagination surface.
+data_transfer:
+  pattern: signed-url-upload
+  note: prepare_train_set_upload / prepare_test_set_upload return signed cloud-storage URLs; clients PUT CSV/Parquet, then call fit/predict by dataset id.
+  formats: [csv, parquet]
+error_envelope:
+  schema: ErrorResponse
+  fields: [code, detail, retryable, support]
+  ref: errors/priorlabs-problem-types.yml
+rate_limiting:
+  signal: HTTP 429
+  model: daily + monthly token pools; separate monthly thinking-fit quota
+  daily_token_limit: 50000000
+  monthly_token_limit: 200000000
+  monthly_thinking_fit_quota: 20
+  docs: https://docs.priorlabs.ai/api-reference/metering
+versioning:
+  ref: lifecycle/priorlabs-lifecycle.yml

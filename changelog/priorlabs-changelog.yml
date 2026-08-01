@@ -1,0 +1,16 @@
+generated: '2026-07-20'
+method: searched
+source: https://docs.priorlabs.ai/changelog
+scheme: named-releases
+current: TabPFN-3
+docs: https://docs.priorlabs.ai/changelog
+entries:
+- version: TabPFN-3
+  date: '2026-05'
+  breaking: true
+  highlights:
+  - Scales to up to 1M training rows and 200 features; up to 160-class classification.
+  - Thinking mode (inference-time compute scaling) and native text features on the API.
+  - New /tabpfn/* JSON API endpoints; /v1/* multipart surface deprecated.
+  - tabpfn-client 0.3.x calls the new routes.
+  docs: https://docs.priorlabs.ai/changelog/tabpfn-3

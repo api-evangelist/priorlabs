@@ -1,0 +1,23 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for TabPFN API
+  version: 1.0.0
+extends: openapi/priorlabs-openapi-original.json
+actions:
+- target: $.info
+  update:
+    x-apievangelist-provider: priorlabs
+    x-apievangelist-product: TabPFN
+    x-apievangelist-category: machine-learning
+    x-apievangelist-mcp-server: https://api.priorlabs.ai/mcp/server
+    x-apievangelist-docs: https://docs.priorlabs.ai/
+- target: $.info
+  update:
+    x-apievangelist-artifacts:
+      authentication: authentication/priorlabs-authentication.yml
+      conventions: conventions/priorlabs-conventions.yml
+      errors: errors/priorlabs-problem-types.yml
+      lifecycle: lifecycle/priorlabs-lifecycle.yml
+      data-model: data-model/priorlabs-data-model.yml
+      mcp: mcp/priorlabs-mcp.yml
+      agentic-access: agentic-access/priorlabs-agentic-access.yml

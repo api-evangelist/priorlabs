@@ -1,0 +1,2675 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "TabPFN API",
+    "description": "Prior Labs TabPFN API. **Prefer [tabpfn-client](https://github.com/PriorLabs/tabpfn-client)**. Current integration surface: **`/tabpfn/*` JSON routes** (prepare uploads, fit, predict, limits). **`/v1/*` multipart routes are deprecated.** See the [Changelog](/changelog).",
+    "version": "2.0.0",
+    "contact": {
+      "name": "Prior Labs",
+      "email": "hello@priorlabs.ai"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.priorlabs.ai",
+      "description": "Production TabPFN API (`/tabpfn/*` current; `/v1/*` deprecated)"
+    }
+  ],
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "paths": {
+    "/tabpfn/prepare_train_set_upload": {
+      "post": {
+        "summary": "Prepare train set upload",
+        "description": "**Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.\n\nFirst step for TabPFN v2 flow: pass `x_train_info` / `y_train_info` metadata (name, size, hash); receive `train_set_upload_id` and signed upload URLs.",
+        "operationId": "tabpfn_prepare_train_set_upload",
+        "tags": [
+          "Training"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrepareTrainSetUploadRequest"
+              },
+              "example": {
+                "x_train_info": {
+                  "filename": "X_train.csv",
+                  "size_bytes": 1024,
+                  "content_hash": "abc"
+                },
+                "y_train_info": {
+                  "filename": "y_train.csv",
+                  "size_bytes": 64,
+                  "content_hash": "def"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrepareTrainSetUploadResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateTrainSetErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/tabpfn/get_model_limits": {
+      "get": {
+        "summary": "Get model limits",
+        "description": "**Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.\n\nReturns `default_model_version`, per-version `model_limits` (rows, cells, classes, cols), and `dataset_max_size_bytes`. The client calls this to size-check before upload.",
+        "operationId": "tabpfn_get_model_limits",
+        "tags": [
+          "Training"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Limits envelope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetModelLimitsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — authentication required or credentials invalid.\n\n**Possible causes:**\n- Missing or malformed `Authorization` header\n- Invalid or expired JWT token\n- User not found (token references a deleted account)\n- JWT decode errors (JWEDecodeError, JWTDecodeError, JWTClaimsError)\n\n**Examples:**\n- Missing token: `{\"detail\": \"Not authenticated\"}`\n- Invalid credentials: `{\"detail\": \"Could not validate credentials\"}`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "missing_token": {
+                    "value": {
+                      "code": "auth.unauthorized",
+                      "detail": "Not authenticated",
+                      "retryable": false,
+                      "support": "https://discord.com/invite/VJRuU3bSxt"
+                    }
+                  },
+                  "invalid_credentials": {
+                    "value": {
+                      "code": "auth.unauthorized",
+                      "detail": "Could not validate credentials",
+                      "retryable": false,
+                      "support": "https://discord.com/invite/VJRuU3bSxt"
+                    }
+                  },
+                  "expired_token": {
+                    "value": {
+                      "code": "auth.unauthorized",
+                      "detail": "Invalid or expired JWT token",
+                      "retryable": false,
+                      "support": "https://discord.com/invite/VJRuU3bSxt"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tabpfn/fit": {
+      "post": {
+        "summary": "Fit (TabPFN JSON API)",
+        "description": "**Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.\n\nJSON body after you upload train files via `POST /tabpfn/prepare_train_set_upload` and PUT the returned signed URLs. Returns `fitted_train_set_id`. Long fits may stream JSON with leading keepalive whitespace; see the [TabPFN-3 changelog](/changelog/tabpfn-3).\n\nKey fields: `train_set_upload_id` (UUID), `task` (`classification` | `regression`), `tabpfn_systems`, optional `tabpfn_config`, `thinking_effort` (`medium` | `high` or omit), `thinking_timeout_s`, `thinking_effort_metric`, `force_refit`.",
+        "operationId": "tabpfn_fit",
+        "tags": [
+          "Training"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FitRequest"
+              },
+              "example": {
+                "train_set_upload_id": "123e4567-e89b-12d3-a456-426614174000",
+                "task": "classification",
+                "tabpfn_systems": [
+                  "preprocessing",
+                  "text"
+                ],
+                "thinking_effort": "medium"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Fitted train set id (JSON; may be streamed with leading whitespace on long fits).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TabpfnFitResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — authentication required or credentials invalid.\n\n**Possible causes:**\n- Missing or malformed `Authorization` header\n- Invalid or expired JWT token\n- User not found (token references a deleted account)\n- JWT decode errors (JWEDecodeError, JWTDecodeError, JWTClaimsError)\n\n**Examples:**\n- Missing token: `{\"detail\": \"Not authenticated\"}`\n- Invalid credentials: `{\"detail\": \"Could not validate credentials\"}`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "missing_token": {
+                    "value": {
+                      "code": "auth.unauthorized",
+                      "detail": "Not authenticated",
+                      "retryable": false,
+                      "support": "https://discord.com/invite/VJRuU3bSxt"
+                    }
+                  },
+                  "invalid_credentials": {
+                    "value": {
+                      "code": "auth.unauthorized",
+                      "detail": "Could not validate credentials",
+                      "retryable": false,
+                      "support": "https://discord.com/invite/VJRuU3bSxt"
+                    }
+                  },
+                  "expired_token": {
+                    "value": {
+                      "code": "auth.unauthorized",
+                      "detail": "Invalid or expired JWT token",
+                      "retryable": false,
+                      "support": "https://discord.com/invite/VJRuU3bSxt"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Model not found — the provided model ID does not exist or has expired.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "code": "error.not_found",
+                  "detail": "Fitted model with ID 123e4567-e89b-12d3-a456-426614174000 not found",
+                  "retryable": false,
+                  "support": "https://discord.com/invite/VJRuU3bSxt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error — one or more fields are incorrectly formatted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Quota exceeded (predict pre-check or thinking-fit monthly limit)."
+          }
+        }
+      }
+    },
+    "/tabpfn/prepare_test_set_upload": {
+      "post": {
+        "summary": "Prepare test set upload",
+        "description": "**Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.\n\nAfter fit: pass `fitted_train_set_id` and `x_test_info`; receive `test_set_upload_id` and signed URLs for test features.",
+        "operationId": "tabpfn_prepare_test_set_upload",
+        "tags": [
+          "Prediction"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrepareTestSetUploadRequest"
+              },
+              "example": {
+                "fitted_train_set_id": "323e4567-e89b-12d3-a456-426614174000",
+                "x_test_info": {
+                  "filename": "X_test.csv",
+                  "size_bytes": 512,
+                  "content_hash": "ghi"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Test upload id and signed URLs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrepareTestSetUploadResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tabpfn/predict": {
+      "post": {
+        "summary": "Predict (TabPFN JSON API)",
+        "description": "**Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.\n\nJSON body after `POST /tabpfn/prepare_test_set_upload` and file upload. Fields: `test_set_upload_id`, `fitted_train_set_id` (from `/tabpfn/fit`), `task_config` (task + tabpfn config), optional `force_refit`.",
+        "operationId": "tabpfn_predict",
+        "tags": [
+          "Prediction"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PredictRequest"
+              },
+              "example": {
+                "test_set_upload_id": "223e4567-e89b-12d3-a456-426614174000",
+                "fitted_train_set_id": "323e4567-e89b-12d3-a456-426614174000",
+                "task_config": {
+                  "task": "classification",
+                  "tabpfn_config": {
+                    "model_path": "auto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Prediction payload + metadata.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredictResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — authentication required or credentials invalid.\n\n**Possible causes:**\n- Missing or malformed `Authorization` header\n- Invalid or expired JWT token\n- User not found (token references a deleted account)\n- JWT decode errors (JWEDecodeError, JWTDecodeError, JWTClaimsError)\n\n**Examples:**\n- Missing token: `{\"detail\": \"Not authenticated\"}`\n- Invalid credentials: `{\"detail\": \"Could not validate credentials\"}`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "missing_token": {
+                    "value": {
+                      "code": "auth.unauthorized",
+                      "detail": "Not authenticated",
+                      "retryable": false,
+                      "support": "https://discord.com/invite/VJRuU3bSxt"
+                    }
+                  },
+                  "invalid_credentials": {
+                    "value": {
+                      "code": "auth.unauthorized",
+                      "detail": "Could not validate credentials",
+                      "retryable": false,
+                      "support": "https://discord.com/invite/VJRuU3bSxt"
+                    }
+                  },
+                  "expired_token": {
+                    "value": {
+                      "code": "auth.unauthorized",
+                      "detail": "Invalid or expired JWT token",
+                      "retryable": false,
+                      "support": "https://discord.com/invite/VJRuU3bSxt"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Model not found — the provided model ID does not exist or has expired.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "code": "error.not_found",
+                  "detail": "Fitted model with ID 123e4567-e89b-12d3-a456-426614174000 not found",
+                  "retryable": false,
+                  "support": "https://discord.com/invite/VJRuU3bSxt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error — one or more fields are incorrectly formatted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Quota exceeded."
+          }
+        }
+      }
+    },
+    "/v1/fit": {
+      "post": {
+        "summary": "Fit a Model",
+        "description": "**Deprecated:** Prefer the TabPFN client (`tabpfn-client`) or `POST /tabpfn/fit` after preparing uploads. This multipart `/v1/fit` surface is legacy. See the [TabPFN-3 changelog](/changelog/tabpfn-3).\n\nUploads and fits a TabPFN model on your training data. The API automatically handles preprocessing and stores a reference to your trained context (not the model weights). You can use either a single dataset file (with the target column included) or separate feature and label files.",
+        "operationId": "fit_v1_deprecated",
+        "tags": [
+          "Training"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "data": {
+                    "type": "string",
+                    "description": "A JSON string defining the training configuration. \n\n**Supported Systems**: \n- `[\"preprocessing\"]` - Applies skrub preprocessing, \n- `[\"text\"]` - Adds text embeddings for text columns. \n\n**Default**: `[\"preprocessing\", \"text\"]`. \n\n**Supported Config Parameters**:\n- `n_estimators` (`int`, 1-10) - Number of ensemble estimators, \n- `softmax_temperature` (`float`) - Temperature for softmax scaling, \n- `average_before_softmax` (`bool`) - Average before softmax,\n- `ignore_pretraining_limits` (`bool`) - Ignore pretraining limits, \n- `random_state` (`int`) - Random seed for reproducibility."
+                  },
+                  "dataset_file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "**Option 1:** CSV file containing both features (`X_train`) and labels (`y_train`). Use this when you have **all data in a single file**."
+                  },
+                  "features_file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "**Option 2:**: CSV file containing only feature columns (`X_train`). Must be used together with `labels_file`."
+                  },
+                  "labels_file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "**Option 2:** CSV file containing only the target/label column (`y_train`). Must be used together with `features_file`."
+                  }
+                },
+                "oneOf": [
+                  {
+                    "required": [
+                      "data",
+                      "dataset_file"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "data",
+                      "features_file",
+                      "labels_file"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "single_dataset": {
+                  "summary": "Single CSV file (features + target)",
+                  "value": {
+                    "data": "{\"task\": \"classification\", \"schema\": {\"target\": \"churn\"}}",
+                    "dataset_file": "[binary data]"
+                  }
+                },
+                "separate_files": {
+                  "summary": "Separate features and labels files",
+                  "value": {
+                    "data": "{\"task\": \"regression\", \"schema\": {\"target\": \"price\"}}",
+                    "features_file": "[binary data]",
+                    "labels_file": "[binary data]"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Model fitted successfully — returns a model ID for later prediction calls.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FitResponse"
+                },
+                "example": {
+                  "model_id": "123e4567-e89b-12d3-a456-426614174000",
+                  "task": "classification"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request — missing data or malformed input.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "code": "error.bad_request",
+                  "detail": "Invalid request data",
+                  "retryable": false,
+                  "support": "https://discord.com/invite/VJRuU3bSxt"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — authentication required or credentials invalid.\n\n**Possible causes:**\n- Missing or malformed `Authorization` header\n- Invalid or expired JWT token\n- User not found (token references a deleted account)\n- JWT decode errors (JWEDecodeError, JWTDecodeError, JWTClaimsError)\n\n**Examples:**\n- Missing token: `{\"detail\": \"Not authenticated\"}`\n- Invalid credentials: `{\"detail\": \"Could not validate credentials\"}`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "missing_token": {
+                    "value": {
+                      "code": "auth.unauthorized",
+                      "detail": "Not authenticated",
+                      "retryable": false,
+                      "support": "https://discord.com/invite/VJRuU3bSxt"
+                    }
+                  },
+                  "invalid_credentials": {
+                    "value": {
+                      "code": "auth.unauthorized",
+                      "detail": "Could not validate credentials",
+                      "retryable": false,
+                      "support": "https://discord.com/invite/VJRuU3bSxt"
+                    }
+                  },
+                  "expired_token": {
+                    "value": {
+                      "code": "auth.unauthorized",
+                      "detail": "Invalid or expired JWT token",
+                      "retryable": false,
+                      "support": "https://discord.com/invite/VJRuU3bSxt"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — user account not verified or insufficient permissions.\n\n**Possible causes:**\n- Valid token for an unverified user\n- Account not yet verified via email\n\n**Example response:**\n`{\"code\": \"auth.forbidden\", \"detail\": \"User account not verified\", \"retryable\": false, \"support\": \"https://discord.com/invite/VJRuU3bSxt\"}`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "code": "auth.forbidden",
+                  "detail": "User account not verified",
+                  "retryable": false,
+                  "support": "https://discord.com/invite/VJRuU3bSxt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error — one or more fields are incorrectly formatted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "python",
+            "label": "Single CSV upload",
+            "source": "import os, json, requests\n\n# Define your dataset path\ntrain_path = \"train.csv\"\n\n# Get your API key from the environment\napi_key = os.getenv(\"PRIORLABS_API_KEY\")\nheaders = {\"Authorization\": f\"Bearer {api_key}\"}\n\n# Upload your training dataset to /v1/fit\npayload = {\n     \"task\": \"classification\",\n     \"schema\": {\n         \"target\": \"churn\",\n         \"description\": \"Customer churn dataset\"\n     }\n}\n\nfiles = {\n     \"data\": (None, json.dumps(payload), \"application/json\"),\n     \"dataset_file\": (train_path, open(train_path, \"rb\")),\n}\n\nfit_response = requests.post(\n     \"https://api.priorlabs.ai/v1/fit\",\n     headers=headers,\n     files=files,\n)\n\nmodel_id = fit_response.json().get(\"model_id\")\nprint(f\"✅ Model trained: {model_id}\")"
+          },
+          {
+            "lang": "python",
+            "label": "Separate features + labels",
+            "source": "import os, json, requests\n\n# Define your file paths\nX_train_path = \"X_train.csv\"  # features only\ny_train_path = \"y_train.csv\"  # labels only\n\n# Get your API key from the environment\napi_key = os.getenv(\"PRIORLABS_API_KEY\")\nheaders = {\"Authorization\": f\"Bearer {api_key}\"}\n\n# Upload your training dataset with separate files\npayload = {\n    \"task\": \"regression\",\n    \"schema\": {\n        \"target\": \"price\",\n        \"description\": \"House price prediction dataset\"\n    }\n}\n\nfiles = {\n    \"data\": (None, json.dumps(payload), \"application/json\"),\n    \"features_file\": (X_train_path, open(X_train_path, \"rb\")),\n    \"labels_file\": (y_train_path, open(y_train_path, \"rb\")),\n}\n\nfit_response = requests.post(\n    \"https://api.priorlabs.ai/v1/fit\",\n    headers=headers,\n    files=files,\n)\n\nmodel_id = fit_response.json().get(\"model_id\")\nprint(f\"✅ Model trained: {model_id}\")"
+          }
+        ],
+        "deprecated": true
+      }
+    },
+    "/v1/predict": {
+      "post": {
+        "summary": "Run Predictions",
+        "description": "**Deprecated:** Prefer `tabpfn-client` or `POST /tabpfn/predict`. See the [TabPFN-3 changelog](/changelog/tabpfn-3).\n\nRun inference using a previously fitted TabPFN model. Upload your test dataset and specify the model ID from your previous `/v1/fit` call. The endpoint returns predicted probabilities or values depending on the task type.",
+        "operationId": "predict_v1_deprecated",
+        "tags": [
+          "Prediction"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "data",
+                  "file"
+                ],
+                "properties": {
+                  "data": {
+                    "type": "string",
+                    "description": "A JSON string defining the prediction request parameters.\n\n**Required fields:**\n- `model_id` (`str`) - Model ID from your previous `/v1/fit` call\n- `task` (`str`) - Task type: `\"classification\"` or `\"regression\"`\n\n**Optional Config Parameters:**\n- `systems` (`list[str]`) - default: `[\"preprocessing\", \"text\"]`. \n**The following preprocessing systems are supported**: \n     - `[\"preprocessing\"]` - Applies skrub preprocessing, \n   - `[\"text\"]` - Adds text embeddings for text columns. \n- `n_estimators` (`int`) - Number of estimators in the ensemble (1-10)\n- `model_path` (`str`) - Model checkpoint path from [HuggingFace](https://huggingface.co/Prior-Labs/tabpfn_3/tree/main)\n- `categorical_features_indices` (`List[int]`) - Indices of categorical features\n- `softmax_temperature` (`float`) - Temperature for softmax scaling\n- `average_before_softmax` (`bool`) - Average before applying softmax\n- `ignore_pretraining_limits` (`bool`) - Ignore pretraining limits\n- `inference_precision` (`str`) - Inference precision (\"float32\", \"float16\", \"auto\")\n- `random_state` (`int`) - Random seed for reproducibility\n- `balance_probabilities` (`bool`) - Balance class probabilities\n\n**Optional Params (output configuration):**\n- `output_type` (`str`) - Determines prediction output format\n  - Classification: `\"probas\"` (default, probabilities) or `\"preds\"` (predictions)\n  - Regression: `\"mean\"` (default, mean value) or `\"full\"` (includes quantiles, ei, pi)"
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "CSV file containing the dataset to predict on."
+                  }
+                }
+              },
+              "examples": {
+                "classification": {
+                  "summary": "Classification task",
+                  "value": {
+                    "data": "{\"model_id\": \"123e4567-e89b-12d3-a456-426614174000\", \"task\": \"classification\", \"params\": {\"output_type\": \"probabilities\"}}",
+                    "file": "[binary data]"
+                  }
+                },
+                "regression": {
+                  "summary": "Regression task",
+                  "value": {
+                    "data": "{\"model_id\": \"123e4567-e89b-12d3-a456-426614174000\", \"task\": \"regression\", \"config\": {\"n_estimators\": 8}}",
+                    "file": "[binary data]"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Prediction completed successfully — returns predicted values or probabilities depending on the task.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredictionResponse"
+                },
+                "examples": {
+                  "Classification with probabilities": {
+                    "summary": "Classification with probabilities",
+                    "value": {
+                      "duration_seconds": 15,
+                      "prediction": [
+                        [
+                          0.1,
+                          0.9
+                        ],
+                        [
+                          0.8,
+                          0.2
+                        ]
+                      ],
+                      "task": "classification",
+                      "params": {
+                        "average_before_softmax": false,
+                        "categorical_features_indices": null,
+                        "device": [
+                          "cpu"
+                        ],
+                        "differentiable_input": false,
+                        "fit_mode": "fit_preprocessors",
+                        "ignore_pretraining_limits": true,
+                        "inference_config": null,
+                        "inference_precision": "auto",
+                        "memory_saving_mode": true,
+                        "model_path": "auto",
+                        "n_estimators": 8,
+                        "n_jobs": null,
+                        "n_preprocessing_jobs": 4,
+                        "random_state": 42,
+                        "softmax_temperature": 0.2
+                      },
+                      "used_credits": 10,
+                      "remaining_quota": 90
+                    }
+                  },
+                  "Classification with class predictions": {
+                    "summary": "Classification with class predictions",
+                    "value": {
+                      "duration_seconds": 12,
+                      "prediction": [
+                        "class_1",
+                        "class_0",
+                        "class_1"
+                      ],
+                      "task": "classification",
+                      "params": {
+                        "average_before_softmax": false,
+                        "categorical_features_indices": null,
+                        "device": [
+                          "cpu"
+                        ],
+                        "differentiable_input": false,
+                        "fit_mode": "fit_preprocessors",
+                        "ignore_pretraining_limits": true,
+                        "inference_config": null,
+                        "inference_precision": "auto",
+                        "memory_saving_mode": true,
+                        "model_path": "auto",
+                        "n_estimators": 8,
+                        "n_jobs": null,
+                        "n_preprocessing_jobs": 4,
+                        "random_state": 42,
+                        "softmax_temperature": 0.2
+                      },
+                      "used_credits": 8,
+                      "remaining_quota": 92
+                    }
+                  },
+                  "Regression prediction": {
+                    "summary": "Regression prediction",
+                    "value": {
+                      "duration_seconds": 10,
+                      "prediction": [
+                        1250.5,
+                        3200.8,
+                        980.2,
+                        2100
+                      ],
+                      "task": "regression",
+                      "params": {
+                        "average_before_softmax": false,
+                        "categorical_features_indices": null,
+                        "device": [
+                          "cpu"
+                        ],
+                        "differentiable_input": false,
+                        "fit_mode": "fit_preprocessors",
+                        "ignore_pretraining_limits": true,
+                        "inference_config": null,
+                        "inference_precision": "auto",
+                        "memory_saving_mode": true,
+                        "model_path": "auto",
+                        "n_estimators": 8,
+                        "n_jobs": null,
+                        "n_preprocessing_jobs": 4,
+                        "random_state": 42,
+                        "softmax_temperature": 0.2
+                      },
+                      "used_credits": 5,
+                      "remaining_quota": 95
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request — dataset file missing or malformed input.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "code": "error.bad_request",
+                  "detail": "You must upload a dataset `file` for prediction.",
+                  "retryable": false,
+                  "support": "https://discord.com/invite/VJRuU3bSxt"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — authentication required or credentials invalid.\n\n**Possible causes:**\n- Missing or malformed `Authorization` header\n- Invalid or expired JWT token\n- User not found (token references a deleted account)\n- JWT decode errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "missing_token": {
+                    "value": {
+                      "code": "auth.unauthorized",
+                      "detail": "Not authenticated",
+                      "retryable": false,
+                      "support": "https://discord.com/invite/VJRuU3bSxt"
+                    }
+                  },
+                  "invalid_credentials": {
+                    "value": {
+                      "code": "auth.unauthorized",
+                      "detail": "Could not validate credentials",
+                      "retryable": false,
+                      "support": "https://discord.com/invite/VJRuU3bSxt"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — user account not verified or insufficient permissions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "code": "auth.forbidden",
+                  "detail": "User account not verified",
+                  "retryable": false,
+                  "support": "https://discord.com/invite/VJRuU3bSxt"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Model not found — the provided model ID does not exist or has expired.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "code": "error.not_found",
+                  "detail": "Fitted model with ID 123e4567-e89b-12d3-a456-426614174000 not found",
+                  "retryable": false,
+                  "support": "https://discord.com/invite/VJRuU3bSxt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error — incorrect or missing fields in the request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "python",
+            "label": "Getting Started Example",
+            "source": "import os, json, requests\n\n# Define your test dataset path\ntest_path = \"test.csv\"\n\n# Get your API key from the environment\napi_key = os.getenv(\"PRIORLABS_API_KEY\")\nheaders = {\"Authorization\": f\"Bearer {api_key}\"}\n\n# Create prediction payload\npayload = {\n \"task\": \"classification\",\n \"model_id\": model_id, # Use model_id from your /v1/fit call\n}\n\nfiles = {\n    \"data\": (None, json.dumps(payload), \"application/json\"),\n    \"file\": (test_path, open(test_path, \"rb\")),\n}\n\npredict_response = requests.post(\n    \"https://api.priorlabs.ai/v1/predict\",\n    headers=headers,\n    files=files,\n)\n\nprint(\"✅ Predictions:\")\nprint(json.dumps(predict_response.json(), indent=2))"
+          },
+          {
+            "lang": "python",
+            "label": "Example with All Parameters",
+            "source": "import os, json, requests\n\n# Define your test dataset path\ntest_path = \"test.csv\"\n\n# Get your API key from the environment\napi_key = os.getenv(\"PRIORLABS_API_KEY\")\nheaders = {\"Authorization\": f\"Bearer {api_key}\"}\n\n# Create prediction payload\npayload = {\n \"task\": \"classification\",\n \"model_id\": model_id, # Use model_id from your /v1/fit call\n\n # Optional model parameters and configuration\n \"params\": {\n     \"output_type\": \"probas\" # Use \"preds\" for hard labels\n },\n \"systems\": [\"preprocessing\", \"text\"],\n \"config\": {\n    \"n_estimators\": 4,\n    \"categorical_features_indices\": [0, 2, 5],\n    \"softmax_temperature\": 0.75,\n    \"average_before_softmax\": False,\n    \"inference_precision\": \"float32\",\n    \"random_state\": 42,\n    \"inference_config\": {\"batch_size\": 1024},\n    \"model_path\": \"tabpfn-v3-classifier-v3_default.ckpt\",\n    \"balance_probabilities\": True,\n    \"ignore_pretraining_limits\": False\n }\n}\n\nfiles = {\n    \"data\": (None, json.dumps(payload), \"application/json\"),\n    \"file\": (test_path, open(test_path, \"rb\")),\n}\n\npredict_response = requests.post(\n    \"https://api.priorlabs.ai/v1/predict\",\n    headers=headers,\n    files=files,\n)\n\nprint(\"✅ Predictions:\")\nprint(json.dumps(predict_response.json(), indent=2))"
+          }
+        ],
+        "deprecated": true
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Bearer token for authentication, obtained after signing up and generating an API key."
+      }
+    },
+    "schemas": {
+      "PredictionTask": {
+        "type": "string",
+        "enum": [
+          "classification",
+          "regression"
+        ],
+        "description": "Specifies the type of task to perform — either classification or regression."
+      },
+      "Schema": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "default": "target",
+            "description": "The name of the target column in the dataset."
+          },
+          "description": {
+            "type": "string",
+            "description": "A short description of the dataset for reference."
+          }
+        },
+        "example": {
+          "target": "churn",
+          "description": "Customer churn prediction dataset"
+        }
+      },
+      "FitRequest": {
+        "properties": {
+          "train_set_upload_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Train Set Upload Id"
+          },
+          "task": {
+            "$ref": "#/components/schemas/PredictionTask"
+          },
+          "tabpfn_systems": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "preprocessing",
+                "text",
+                "thinking"
+              ]
+            },
+            "type": "array",
+            "title": "Tabpfn Systems",
+            "default": [
+              "preprocessing",
+              "text"
+            ]
+          },
+          "tabpfn_config": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tabpfn Config"
+          },
+          "thinking_effort": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "medium",
+                  "high"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thinking Effort"
+          },
+          "thinking_timeout_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thinking Timeout S"
+          },
+          "thinking_effort_metric": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thinking Effort Metric"
+          },
+          "force_refit": {
+            "type": "boolean",
+            "title": "Force Refit",
+            "description": "Whether to force the fitting of the train set even if a fittedtrain set and transform states already exist.",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "train_set_upload_id",
+          "task"
+        ],
+        "title": "FitRequest"
+      },
+      "FitResponse": {
+        "type": "object",
+        "required": [
+          "model_id",
+          "task"
+        ],
+        "properties": {
+          "model_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier for the fitted model (used for prediction calls)."
+          },
+          "task": {
+            "$ref": "#/components/schemas/PredictionTask"
+          }
+        },
+        "example": {
+          "model_id": "123e4567-e89b-12d3-a456-426614174000",
+          "task": "classification"
+        }
+      },
+      "PredictionRequest": {
+        "type": "object",
+        "required": [
+          "model_id",
+          "task"
+        ],
+        "properties": {
+          "model_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The unique model ID returned from a previous `/fit` call."
+          },
+          "task": {
+            "$ref": "#/components/schemas/PredictionTask"
+          },
+          "dataset_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of an existing dataset to reuse for prediction."
+          },
+          "params": {
+            "type": "object",
+            "description": "Prediction parameters that control the output type and format.",
+            "properties": {
+              "output_type": {
+                "type": "string",
+                "enum": [
+                  "probabilities",
+                  "predictions"
+                ],
+                "description": "Specifies whether to return probabilities or direct predictions."
+              }
+            },
+            "example": {
+              "output_type": "probabilities"
+            }
+          },
+          "systems": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "preprocessing",
+                "text"
+              ]
+            },
+            "default": [
+              "preprocessing",
+              "text"
+            ],
+            "description": "Internal systems to use for prediction (e.g., preprocessing, text embeddings)."
+          },
+          "config": {
+            "type": "object",
+            "description": "Optional TabPFN inference configuration parameters.",
+            "properties": {
+              "n_estimators": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10
+              },
+              "softmax_temperature": {
+                "type": "number"
+              },
+              "average_before_softmax": {
+                "type": "boolean"
+              },
+              "random_state": {
+                "type": "integer"
+              },
+              "thinking": {
+                "type": "boolean"
+              }
+            },
+            "example": {
+              "n_estimators": 4,
+              "random_state": 42,
+              "thinking": true
+            }
+          }
+        }
+      },
+      "PredictionResponse": {
+        "type": "object",
+        "required": [
+          "duration_seconds",
+          "prediction",
+          "task",
+          "used_credits",
+          "remaining_quota"
+        ],
+        "properties": {
+          "duration_seconds": {
+            "type": "integer",
+            "description": "Time taken (in seconds) to complete the prediction."
+          },
+          "prediction": {
+            "description": "The prediction output. Format depends on task and output_type:\n- **Regression**: List of floats (e.g., `[1250.5, 3200.8, 980.2]`)\n- **Classification with `output_type: probas`**: List of lists (probabilities) (e.g., `[[0.1, 0.9], [0.8, 0.2]]`)\n- **Classification with `output_type: preds`**: List of classes (e.g., `[\"class_0\", \"class_1\"]`)",
+            "oneOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "description": "Regression predictions or classification probabilities"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "description": "Classification probabilities (list of lists)"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Classification predictions (list of class names)"
+              }
+            ]
+          },
+          "task": {
+            "$ref": "#/components/schemas/PredictionTask"
+          },
+          "params": {
+            "type": "object",
+            "description": "The inference parameters that were used during prediction.",
+            "properties": {
+              "average_before_softmax": {
+                "type": "boolean",
+                "description": "Whether to average before applying softmax."
+              },
+              "categorical_features_indices": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "nullable": true,
+                "description": "Indices of categorical features."
+              },
+              "ignore_pretraining_limits": {
+                "type": "boolean",
+                "description": "Whether to ignore pretraining limits."
+              },
+              "inference_config": {
+                "type": "object",
+                "nullable": true,
+                "description": "Additional inference configuration parameters."
+              },
+              "inference_precision": {
+                "type": "string",
+                "description": "Inference precision (e.g., \"auto\", \"float32\", \"float16\")."
+              },
+              "model_path": {
+                "type": "string",
+                "description": "Model checkpoint path used for inference."
+              },
+              "n_estimators": {
+                "type": "integer",
+                "description": "Number of ensemble estimators used."
+              },
+              "n_preprocessing_jobs": {
+                "type": "integer",
+                "description": "Number of preprocessing jobs."
+              },
+              "random_state": {
+                "type": "integer",
+                "nullable": true,
+                "description": "Random seed used for reproducibility."
+              },
+              "softmax_temperature": {
+                "type": "number",
+                "description": "Softmax temperature parameter used."
+              }
+            }
+          },
+          "used_credits": {
+            "type": "integer",
+            "description": "The number of credits consumed by this API call."
+          },
+          "remaining_quota": {
+            "type": "integer",
+            "description": "Your remaining credit balance after this request."
+          }
+        },
+        "example": {
+          "duration_seconds": 15,
+          "prediction": [
+            0.1,
+            0.9,
+            0.3,
+            0.7
+          ],
+          "task": "classification",
+          "params": {
+            "average_before_softmax": false,
+            "categorical_features_indices": null,
+            "ignore_pretraining_limits": true,
+            "inference_config": null,
+            "inference_precision": "auto",
+            "model_path": "auto",
+            "n_estimators": 8,
+            "n_preprocessing_jobs": 4,
+            "random_state": 42,
+            "softmax_temperature": 0.2
+          },
+          "used_credits": 10,
+          "remaining_quota": 90
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": [
+          "code",
+          "detail",
+          "retryable",
+          "support"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Error category code (e.g., auth.unauthorized, rate.limit.exceeded)",
+            "example": "auth.unauthorized"
+          },
+          "detail": {
+            "type": "string",
+            "description": "Human-readable error message describing what went wrong.",
+            "example": "Invalid authentication credentials"
+          },
+          "retryable": {
+            "type": "boolean",
+            "description": "Indicates whether the request can be retried.",
+            "example": false
+          },
+          "support": {
+            "type": "string",
+            "description": "URL to get support for this error.",
+            "example": "https://discord.com/invite/VJRuU3bSxt"
+          }
+        },
+        "example": {
+          "code": "auth.unauthorized",
+          "detail": "Invalid authentication credentials",
+          "retryable": false,
+          "support": "https://discord.com/invite/VJRuU3bSxt"
+        }
+      },
+      "ValidationError": {
+        "type": "object",
+        "required": [
+          "code",
+          "detail",
+          "errors",
+          "retryable",
+          "support"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Error category code for validation errors",
+            "example": "validation.failed"
+          },
+          "detail": {
+            "type": "string",
+            "description": "Human-readable validation error message",
+            "example": "Validation error for FitRequest"
+          },
+          "errors": {
+            "type": "array",
+            "description": "Array of field-level validation errors",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "description": "Field name where the error occurred",
+                  "example": "task"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "Error message for this field",
+                  "example": "field required"
+                }
+              }
+            }
+          },
+          "retryable": {
+            "type": "boolean",
+            "description": "Indicates whether the request can be retried",
+            "example": false
+          },
+          "support": {
+            "type": "string",
+            "description": "URL to get support for this error",
+            "example": "https://discord.com/invite/VJRuU3bSxt"
+          }
+        },
+        "example": {
+          "code": "validation.failed",
+          "detail": "Validation error for FitRequest",
+          "errors": [
+            {
+              "field": "task",
+              "message": "field required"
+            },
+            {
+              "field": "systems",
+              "message": "Invalid system: invalid_system. Must be one of: ['preprocessing', 'text']"
+            }
+          ],
+          "retryable": false,
+          "support": "https://discord.com/invite/VJRuU3bSxt"
+        }
+      },
+      "TabpfnFitResponse": {
+        "type": "object",
+        "required": [
+          "fitted_train_set_id"
+        ],
+        "properties": {
+          "fitted_train_set_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "DuplicateTrainSetErrorResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "error_code": {
+            "type": "string",
+            "title": "Error Code",
+            "default": "DUPLICATE_TRAIN_SET_UPLOAD"
+          },
+          "trace_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trace Id"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "train_set_upload_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Train Set Upload Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message",
+          "train_set_upload_id"
+        ],
+        "title": "DuplicateTrainSetErrorResponse"
+      },
+      "FileInfo": {
+        "properties": {
+          "format": {
+            "type": "string",
+            "enum": [
+              "csv",
+              "parquet"
+            ],
+            "title": "Format"
+          },
+          "hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hash",
+            "description": "The crc32c hash of the file, used to deduplicate the file."
+          },
+          "size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size Bytes",
+            "description": "The size of the file in bytes, used to compute the optimal number of chunks when chunking is enabled."
+          },
+          "use_chunks": {
+            "type": "boolean",
+            "title": "Use Chunks",
+            "description": "Whether to split the the file into chunks and upload them in parallel.",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "format"
+        ],
+        "title": "FileInfo"
+      },
+      "FileUploadInfo": {
+        "properties": {
+          "signed_urls": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Signed Urls"
+          },
+          "expires_at": {
+            "type": "number",
+            "title": "Expires At"
+          },
+          "required_headers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Required Headers"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "signed_urls",
+          "expires_at",
+          "required_headers"
+        ],
+        "title": "FileUploadInfo"
+      },
+      "PrepareTrainSetUploadRequest": {
+        "properties": {
+          "x_train_info": {
+            "$ref": "#/components/schemas/FileInfo"
+          },
+          "y_train_info": {
+            "$ref": "#/components/schemas/FileInfo"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "force_reupload": {
+            "type": "boolean",
+            "title": "Force Reupload",
+            "description": "Whether to force the upload of the file even if a file with the same hash already exists.",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "x_train_info",
+          "y_train_info"
+        ],
+        "title": "PrepareTrainSetUploadRequest"
+      },
+      "PrepareTrainSetUploadResponse": {
+        "properties": {
+          "train_set_upload_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Train Set Upload Id"
+          },
+          "x_train_info": {
+            "$ref": "#/components/schemas/FileUploadInfo"
+          },
+          "y_train_info": {
+            "$ref": "#/components/schemas/FileUploadInfo"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "train_set_upload_id",
+          "x_train_info",
+          "y_train_info"
+        ],
+        "title": "PrepareTrainSetUploadResponse"
+      },
+      "ClassifierConfig": {
+        "properties": {
+          "task": {
+            "type": "string",
+            "const": "classification",
+            "title": "Task",
+            "default": "classification"
+          },
+          "tabpfn_config": {
+            "$ref": "#/components/schemas/ClassifierTabPFNConfig"
+          },
+          "predict_params": {
+            "$ref": "#/components/schemas/ClassifierPredictParams"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ClassifierConfig"
+      },
+      "ClassifierMetadata": {
+        "properties": {
+          "test_set_num_rows": {
+            "type": "integer",
+            "title": "Test Set Num Rows"
+          },
+          "test_set_num_cols": {
+            "type": "integer",
+            "title": "Test Set Num Cols"
+          },
+          "task": {
+            "type": "string",
+            "const": "classification",
+            "title": "Task",
+            "default": "classification"
+          },
+          "package_version": {
+            "type": "string",
+            "title": "Package Version"
+          },
+          "tabpfn_config": {
+            "$ref": "#/components/schemas/ClassifierTabPFNConfig"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "test_set_num_rows",
+          "test_set_num_cols",
+          "package_version",
+          "tabpfn_config"
+        ],
+        "title": "ClassifierMetadata"
+      },
+      "ClassifierOutputType": {
+        "type": "string",
+        "enum": [
+          "probas",
+          "preds"
+        ],
+        "title": "ClassifierOutputType"
+      },
+      "ClassifierPredictParams": {
+        "properties": {
+          "output_type": {
+            "$ref": "#/components/schemas/ClassifierOutputType",
+            "default": "probas"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ClassifierPredictParams"
+      },
+      "ClassifierTabPFNConfig": {
+        "properties": {
+          "n_estimators": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 8,
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Estimators"
+          },
+          "categorical_features_indices": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categorical Features Indices"
+          },
+          "softmax_temperature": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Softmax Temperature"
+          },
+          "average_before_softmax": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Before Softmax"
+          },
+          "random_state": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Random State"
+          },
+          "inference_config": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "$ref": "#/components/schemas/InferenceConfig"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inference Config"
+          },
+          "ignore_pretraining_limits": {
+            "type": "boolean",
+            "title": "Ignore Pretraining Limits",
+            "default": true
+          },
+          "n_preprocessing_jobs": {
+            "type": "integer",
+            "title": "N Preprocessing Jobs",
+            "default": 4
+          },
+          "inference_precision": {
+            "type": "string",
+            "title": "Inference Precision",
+            "default": "auto"
+          },
+          "fit_mode": {
+            "$ref": "#/components/schemas/FitMode",
+            "default": "fit_preprocessors"
+          },
+          "device": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device"
+          },
+          "memory_saving_mode": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Saving Mode"
+          },
+          "model_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Path"
+          },
+          "balance_probabilities": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Balance Probabilities"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ClassifierTabPFNConfig"
+      },
+      "DuplicateTestSetErrorResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "error_code": {
+            "type": "string",
+            "title": "Error Code",
+            "default": "DUPLICATE_TEST_SET_UPLOAD"
+          },
+          "trace_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trace Id"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "test_set_upload_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Test Set Upload Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message",
+          "test_set_upload_id"
+        ],
+        "title": "DuplicateTestSetErrorResponse"
+      },
+      "FitMode": {
+        "type": "string",
+        "enum": [
+          "low_memory",
+          "fit_preprocessors",
+          "fit_with_cache",
+          "batched"
+        ],
+        "title": "FitMode"
+      },
+      "GetModelLimitsResponse": {
+        "properties": {
+          "default_model_version": {
+            "$ref": "#/components/schemas/ModelVersion"
+          },
+          "max_model_limit": {
+            "$ref": "#/components/schemas/ModelLimit"
+          },
+          "model_limits": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ModelLimit"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/ModelVersion"
+            },
+            "type": "object",
+            "title": "Model Limits"
+          },
+          "dataset_max_size_bytes": {
+            "type": "integer",
+            "title": "Dataset Max Size Bytes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "default_model_version",
+          "max_model_limit",
+          "model_limits",
+          "dataset_max_size_bytes"
+        ],
+        "title": "GetModelLimitsResponse"
+      },
+      "InferenceConfig": {
+        "properties": {
+          "PREPROCESS_TRANSFORMS": {
+            "items": {
+              "$ref": "#/components/schemas/PreprocessorConfig"
+            },
+            "type": "array",
+            "title": "Preprocess Transforms"
+          },
+          "MAX_UNIQUE_FOR_CATEGORICAL_FEATURES": {
+            "type": "integer",
+            "title": "Max Unique For Categorical Features",
+            "default": 30
+          },
+          "MIN_UNIQUE_FOR_NUMERICAL_FEATURES": {
+            "type": "integer",
+            "title": "Min Unique For Numerical Features",
+            "default": 4
+          },
+          "MIN_NUMBER_SAMPLES_FOR_CATEGORICAL_INFERENCE": {
+            "type": "integer",
+            "title": "Min Number Samples For Categorical Inference",
+            "default": 100
+          },
+          "OUTLIER_REMOVAL_STD": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "const": "auto"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outlier Removal Std",
+            "default": "auto"
+          },
+          "FEATURE_SHIFT_METHOD": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "shuffle",
+                  "rotate"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feature Shift Method",
+            "default": "shuffle"
+          },
+          "CLASS_SHIFT_METHOD": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "shuffle",
+                  "rotate"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class Shift Method",
+            "default": "shuffle"
+          },
+          "FINGERPRINT_FEATURE": {
+            "type": "boolean",
+            "title": "Fingerprint Feature",
+            "default": true
+          },
+          "POLYNOMIAL_FEATURES": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "no",
+                  "all"
+                ]
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Polynomial Features",
+            "default": "no"
+          },
+          "SUBSAMPLE_SAMPLES": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subsample Samples"
+          },
+          "ENABLE_GPU_PREPROCESSING": {
+            "type": "boolean",
+            "title": "Enable Gpu Preprocessing",
+            "default": false
+          },
+          "FEATURE_SUBSAMPLING_METHOD": {
+            "type": "string",
+            "enum": [
+              "balanced",
+              "random",
+              "constant_and_balanced",
+              "gini_feature_importance",
+              "auto"
+            ],
+            "title": "Feature Subsampling Method",
+            "default": "balanced"
+          },
+          "FEATURE_SUBSAMPLING_CONSTANT_FEATURE_COUNT": {
+            "type": "integer",
+            "title": "Feature Subsampling Constant Feature Count",
+            "default": 50
+          },
+          "FEATURE_SUBSAMPLING_IMPORTANCE_TOP_K_COUNT": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "const": "auto"
+              }
+            ],
+            "title": "Feature Subsampling Importance Top K Count",
+            "default": "auto"
+          },
+          "REGRESSION_Y_PREPROCESS_TRANSFORMS": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Regression Y Preprocess Transforms",
+            "default": [
+              null,
+              "safepower"
+            ]
+          },
+          "USE_SKLEARN_16_DECIMAL_PRECISION": {
+            "type": "boolean",
+            "title": "Use Sklearn 16 Decimal Precision",
+            "default": false
+          },
+          "MAX_NUMBER_OF_CLASSES": {
+            "type": "integer",
+            "title": "Max Number Of Classes",
+            "default": 10
+          },
+          "MAX_NUMBER_OF_FEATURES": {
+            "type": "integer",
+            "title": "Max Number Of Features",
+            "default": 500
+          },
+          "MAX_NUMBER_OF_SAMPLES": {
+            "type": "integer",
+            "title": "Max Number Of Samples",
+            "default": 10000
+          },
+          "FIX_NAN_BORDERS_AFTER_TARGET_TRANSFORM": {
+            "type": "boolean",
+            "title": "Fix Nan Borders After Target Transform",
+            "default": true
+          },
+          "_REGRESSION_DEFAULT_OUTLIER_REMOVAL_STD": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regression Default Outlier Removal Std"
+          },
+          "_CLASSIFICATION_DEFAULT_OUTLIER_REMOVAL_STD": {
+            "type": "number",
+            "title": "Classification Default Outlier Removal Std",
+            "default": 12
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "PREPROCESS_TRANSFORMS"
+        ],
+        "title": "InferenceConfig",
+        "description": "Additional configuration options for inference.\n\nSeveral configuration options for inference are exposed in the `TabPFNClassifier`\nand `TabPFNRegressor` interfaces. The options in this class are more advanced and\nnot expected to be changed by the (standard) user.\n\nSeveral of the preprocessing options are supported by our code for efficiency\nreasons (to avoid loading TabPFN multiple times). However, these can also be\napplied outside of the model interface.\n\nThis class must be serializable as it is peristed in the model checkpoints.\n\nDo not edit the default values in this class, as this can affect the backwards\ncompatibility of the model checkpoints. Instead, edit `get_default()`."
+      },
+      "ModelLimit": {
+        "properties": {
+          "train_set_max_rows": {
+            "type": "integer",
+            "title": "Train Set Max Rows"
+          },
+          "train_set_max_cells": {
+            "type": "integer",
+            "title": "Train Set Max Cells"
+          },
+          "test_set_max_rows": {
+            "type": "integer",
+            "title": "Test Set Max Rows"
+          },
+          "max_classes": {
+            "type": "integer",
+            "title": "Max Classes"
+          },
+          "max_cols": {
+            "type": "integer",
+            "title": "Max Cols",
+            "default": 2000
+          },
+          "test_set_max_rows_w_full_regression_output": {
+            "type": "integer",
+            "title": "Test Set Max Rows W Full Regression Output",
+            "default": 400
+          },
+          "test_set_max_cells": {
+            "type": "integer",
+            "title": "Test Set Max Cells",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "train_set_max_rows",
+          "train_set_max_cells",
+          "test_set_max_rows",
+          "max_classes",
+          "test_set_max_cells"
+        ],
+        "title": "ModelLimit"
+      },
+      "ModelVersion": {
+        "type": "string",
+        "enum": [
+          "v2",
+          "v2.5",
+          "v2.6",
+          "v3"
+        ],
+        "title": "ModelVersion"
+      },
+      "NotFoundErrorResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "error_code": {
+            "type": "string",
+            "title": "Error Code",
+            "default": "NOT_FOUND"
+          },
+          "trace_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trace Id"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "NotFoundErrorResponse"
+      },
+      "PredictRequest": {
+        "properties": {
+          "test_set_upload_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Test Set Upload Id"
+          },
+          "fitted_train_set_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Fitted Train Set Id"
+          },
+          "task_config": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ClassifierConfig"
+              },
+              {
+                "$ref": "#/components/schemas/RegressorConfig"
+              }
+            ],
+            "title": "Task Config",
+            "discriminator": {
+              "propertyName": "task",
+              "mapping": {
+                "classification": "#/components/schemas/ClassifierConfig",
+                "regression": "#/components/schemas/RegressorConfig"
+              }
+            }
+          },
+          "force_refit": {
+            "type": "boolean",
+            "title": "Force Refit",
+            "description": "Whether to force the fitting of the test set even if a fittedtest set and transform states already exist.",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "test_set_upload_id",
+          "fitted_train_set_id",
+          "task_config"
+        ],
+        "title": "PredictRequest"
+      },
+      "PredictResponse": {
+        "properties": {
+          "prediction": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "items": {
+                  "items": {},
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "items": {},
+                      "type": "array"
+                    },
+                    {
+                      "items": {
+                        "items": {},
+                        "type": "array"
+                      },
+                      "type": "array"
+                    }
+                  ]
+                },
+                "type": "object"
+              }
+            ],
+            "title": "Prediction"
+          },
+          "metadata": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ClassifierMetadata"
+              },
+              {
+                "$ref": "#/components/schemas/RegressorMetadata"
+              }
+            ],
+            "title": "Metadata",
+            "discriminator": {
+              "propertyName": "task",
+              "mapping": {
+                "classification": "#/components/schemas/ClassifierMetadata",
+                "regression": "#/components/schemas/RegressorMetadata"
+              }
+            }
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "prediction",
+          "metadata"
+        ],
+        "title": "PredictResponse"
+      },
+      "PrepareTestSetUploadRequest": {
+        "properties": {
+          "fitted_train_set_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Fitted Train Set Id"
+          },
+          "x_test_info": {
+            "$ref": "#/components/schemas/FileInfo"
+          },
+          "force_reupload": {
+            "type": "boolean",
+            "title": "Force Reupload",
+            "description": "Whether to force the upload of the file even if a file with the same hash already exists.",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "fitted_train_set_id",
+          "x_test_info"
+        ],
+        "title": "PrepareTestSetUploadRequest"
+      },
+      "PrepareTestSetUploadResponse": {
+        "properties": {
+          "test_set_upload_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Test Set Upload Id"
+          },
+          "x_test_info": {
+            "$ref": "#/components/schemas/FileUploadInfo"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "test_set_upload_id",
+          "x_test_info"
+        ],
+        "title": "PrepareTestSetUploadResponse"
+      },
+      "PreprocessorConfig": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": [
+              "per_feature",
+              "power",
+              "safepower",
+              "power_box",
+              "safepower_box",
+              "quantile_uni_coarse",
+              "quantile_norm_coarse",
+              "quantile_uni",
+              "quantile_norm",
+              "quantile_uni_fine",
+              "quantile_norm_fine",
+              "squashing_scaler_default",
+              "squashing_scaler_max10",
+              "robust",
+              "kdi",
+              "none",
+              "kdi_random_alpha",
+              "kdi_uni",
+              "kdi_random_alpha_uni",
+              "adaptive",
+              "norm_and_kdi",
+              "kdi_alpha_0.3_uni",
+              "kdi_alpha_0.5_uni",
+              "kdi_alpha_0.8_uni",
+              "kdi_alpha_1.0_uni",
+              "kdi_alpha_1.2_uni",
+              "kdi_alpha_1.5_uni",
+              "kdi_alpha_2.0_uni",
+              "kdi_alpha_3.0_uni",
+              "kdi_alpha_5.0_uni",
+              "kdi_alpha_0.3",
+              "kdi_alpha_0.5",
+              "kdi_alpha_0.8",
+              "kdi_alpha_1.0",
+              "kdi_alpha_1.2",
+              "kdi_alpha_1.5",
+              "kdi_alpha_2.0",
+              "kdi_alpha_3.0",
+              "kdi_alpha_5.0"
+            ],
+            "title": "Name"
+          },
+          "categorical_name": {
+            "type": "string",
+            "enum": [
+              "none",
+              "numeric",
+              "onehot",
+              "ordinal",
+              "ordinal_shuffled",
+              "ordinal_very_common_categories_shuffled"
+            ],
+            "title": "Categorical Name",
+            "default": "none"
+          },
+          "append_original": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "string",
+                "const": "auto"
+              }
+            ],
+            "title": "Append Original",
+            "default": false
+          },
+          "max_features_per_estimator": {
+            "type": "integer",
+            "title": "Max Features Per Estimator",
+            "default": 500
+          },
+          "global_transformer_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "svd",
+                  "svd_quarter_components"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Global Transformer Name"
+          },
+          "max_onehot_cardinality": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Onehot Cardinality"
+          },
+          "differentiable": {
+            "type": "boolean",
+            "title": "Differentiable",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "PreprocessorConfig",
+        "description": "Configuration for data preprocessing.\n\nAttributes:\n    name: Name of the preprocessor.\n    categorical_name:\n        Name of the categorical encoding method.\n        Options: \"none\", \"numeric\", \"onehot\", \"ordinal\", \"ordinal_shuffled\", \"none\".\n    append_to_original: If set to \"auto\", this is dynamically set to\n        True if the number of features is less than 500, and False otherwise.\n        Note that if set to \"auto\" and `max_features_per_estimator` is set as well,\n        this flag will become False if the number of features is larger than\n        `max_features_per_estimator / 2`. If True, the transformed features are\n        appended to the original features, however both are capped at the\n        max_features_per_estimator threshold, this should be used with caution as a\n        given model might not be configured for it.\n    max_features_per_estimator: Maximum number of features per estimator. In case\n        the dataset has more features than this, the features are subsampled for\n        each estimator independently. If append to original is set to True we can\n        still have more features.\n    global_transformer_name: Name of the global transformer to use.\n    max_onehot_cardinality: Maximum number of unique values a categorical feature\n        can have to be one-hot encoded. Features with higher cardinality are passed\n        through unchanged to ordinal encoding. If None, all categorical features\n        are one-hot encoded."
+      },
+      "RegressorConfig": {
+        "properties": {
+          "task": {
+            "type": "string",
+            "const": "regression",
+            "title": "Task",
+            "default": "regression"
+          },
+          "tabpfn_config": {
+            "$ref": "#/components/schemas/RegressorTabPFNConfig"
+          },
+          "predict_params": {
+            "$ref": "#/components/schemas/RegressorPredictParams"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "RegressorConfig"
+      },
+      "RegressorMetadata": {
+        "properties": {
+          "test_set_num_rows": {
+            "type": "integer",
+            "title": "Test Set Num Rows"
+          },
+          "test_set_num_cols": {
+            "type": "integer",
+            "title": "Test Set Num Cols"
+          },
+          "task": {
+            "type": "string",
+            "const": "regression",
+            "title": "Task",
+            "default": "regression"
+          },
+          "package_version": {
+            "type": "string",
+            "title": "Package Version"
+          },
+          "tabpfn_config": {
+            "$ref": "#/components/schemas/RegressorTabPFNConfig"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "test_set_num_rows",
+          "test_set_num_cols",
+          "package_version",
+          "tabpfn_config"
+        ],
+        "title": "RegressorMetadata"
+      },
+      "RegressorOutputType": {
+        "type": "string",
+        "enum": [
+          "mean",
+          "median",
+          "mode",
+          "quantiles",
+          "full",
+          "main"
+        ],
+        "title": "RegressorOutputType"
+      },
+      "RegressorPredictParams": {
+        "properties": {
+          "output_type": {
+            "$ref": "#/components/schemas/RegressorOutputType",
+            "default": "mean"
+          },
+          "quantiles": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number",
+                  "maximum": 1,
+                  "minimum": 0
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantiles"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "RegressorPredictParams"
+      },
+      "RegressorTabPFNConfig": {
+        "properties": {
+          "n_estimators": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 8,
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Estimators"
+          },
+          "categorical_features_indices": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categorical Features Indices"
+          },
+          "softmax_temperature": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Softmax Temperature"
+          },
+          "average_before_softmax": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Before Softmax"
+          },
+          "random_state": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Random State"
+          },
+          "inference_config": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "$ref": "#/components/schemas/InferenceConfig"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inference Config"
+          },
+          "ignore_pretraining_limits": {
+            "type": "boolean",
+            "title": "Ignore Pretraining Limits",
+            "default": true
+          },
+          "n_preprocessing_jobs": {
+            "type": "integer",
+            "title": "N Preprocessing Jobs",
+            "default": 4
+          },
+          "inference_precision": {
+            "type": "string",
+            "title": "Inference Precision",
+            "default": "auto"
+          },
+          "fit_mode": {
+            "$ref": "#/components/schemas/FitMode",
+            "default": "fit_preprocessors"
+          },
+          "device": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device"
+          },
+          "memory_saving_mode": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Saving Mode"
+          },
+          "model_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Path"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "RegressorTabPFNConfig"
+      }
+    }
+  }
+}

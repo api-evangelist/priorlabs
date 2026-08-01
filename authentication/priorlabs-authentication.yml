@@ -1,0 +1,15 @@
+generated: '2026-07-20'
+method: derived
+source: openapi/priorlabs-openapi-original.json
+summary:
+  types:
+  - http
+schemes:
+- name: BearerAuth
+  type: http
+  scheme: bearer
+  bearerFormat: JWT
+  description: Bearer token for authentication, obtained after signing up and generating an
+    API key.
+  sources:
+  - openapi/priorlabs-openapi-original.json

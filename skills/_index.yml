@@ -1,0 +1,12 @@
+generated: '2026-07-20'
+method: generated
+source: openapi/priorlabs-openapi-original.json
+skills:
+- file: priorlabs-fit-and-predict.md
+  name: TabPFN fit and predict
+  api: openapi/priorlabs-openapi-original.json
+  operations: [tabpfn_get_model_limits, tabpfn_prepare_train_set_upload, tabpfn_fit, tabpfn_prepare_test_set_upload, tabpfn_predict]
+- file: priorlabs-mcp-predictions.md
+  name: TabPFN predictions via MCP
+  api: mcp/priorlabs-mcp.yml
+  operations: [upload_dataset, fit_and_predict_from_dataset, predict_from_dataset, fit_and_predict_inline, predict_inline]

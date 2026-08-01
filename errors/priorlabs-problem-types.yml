@@ -1,0 +1,49 @@
+generated: '2026-07-20'
+method: derived
+source: openapi/priorlabs-openapi-original.json
+format: custom
+envelope:
+  schema: ErrorResponse
+  fields:
+  - code       # error category code, e.g. auth.unauthorized, rate.limit.exceeded
+  - detail     # human-readable message
+  - retryable  # boolean
+  - support    # support reference / contact
+  note: Errors use a custom JSON envelope (not RFC 9457 problem+json). 422 responses use the ValidationError schema.
+problems:
+- status: 401
+  code: auth.unauthorized
+  title: Unauthorized — missing or invalid bearer token / API key.
+  schema: ErrorResponse
+  source_operations: [tabpfn_get_model_limits, tabpfn_fit, tabpfn_predict, fit_v1_deprecated, predict_v1_deprecated]
+- status: 404
+  code: not_found
+  title: Referenced model or dataset not found.
+  schema: NotFoundErrorResponse
+  source_operations: [tabpfn_fit, tabpfn_predict, predict_v1_deprecated]
+- status: 409
+  code: duplicate_train_set
+  title: Train set already uploaded / duplicate dataset.
+  schema: DuplicateTrainSetErrorResponse
+  source_operations: [tabpfn_prepare_train_set_upload]
+- status: 422
+  code: validation_error
+  title: Request validation failed.
+  schema: ValidationError
+  source_operations: [tabpfn_fit, tabpfn_predict, fit_v1_deprecated, predict_v1_deprecated]
+- status: 429
+  code: rate.limit.exceeded
+  title: Rate/quota limit exceeded (daily/monthly token pool or thinking-fit quota); reset time included in the message.
+  retryable: true
+  schema: ErrorResponse
+  source_operations: [tabpfn_fit, tabpfn_predict]
+- status: 400
+  code: bad_request
+  title: Bad request (deprecated /v1 surface).
+  schema: ErrorResponse
+  source_operations: [fit_v1_deprecated, predict_v1_deprecated]
+- status: 403
+  code: forbidden
+  title: Forbidden (deprecated /v1 surface).
+  schema: ErrorResponse
+  source_operations: [fit_v1_deprecated, predict_v1_deprecated]

@@ -1,0 +1,50 @@
+generated: '2026-07-20'
+method: derived
+source: openapi/priorlabs-openapi-original.json
+entities:
+- name: Dataset
+  description: An uploaded train or test set (CSV/Parquet) obtained via a signed upload URL; referenced by dataset_id.
+  id_field: dataset_id
+  created_by: [tabpfn_prepare_train_set_upload, tabpfn_prepare_test_set_upload]
+- name: Model
+  description: A fitted TabPFN model over a train dataset; referenced by a model/train identifier.
+  id_field: model_id
+  created_by: [tabpfn_fit]
+- name: Prediction
+  description: Predictions produced by running a fitted model over a test dataset.
+  created_by: [tabpfn_predict]
+- name: ModelLimit
+  description: Per-version dataset/quota limits (rows, columns, classes) reported by get_model_limits.
+  created_by: [tabpfn_get_model_limits]
+relationships:
+- from: Model
+  type: belongs_to
+  to: Dataset
+  via: train dataset_id
+- from: Prediction
+  type: belongs_to
+  to: Model
+  via: model_id
+- from: Prediction
+  type: belongs_to
+  to: Dataset
+  via: test dataset_id
+schemas:
+- FitRequest
+- FitResponse
+- TabpfnFitResponse
+- PredictRequest
+- PredictResponse
+- PredictionRequest
+- PredictionResponse
+- PrepareTrainSetUploadRequest
+- PrepareTrainSetUploadResponse
+- PrepareTestSetUploadRequest
+- PrepareTestSetUploadResponse
+- GetModelLimitsResponse
+- ModelLimit
+- ModelVersion
+- ClassifierConfig
+- RegressorConfig
+- InferenceConfig
+- PreprocessorConfig

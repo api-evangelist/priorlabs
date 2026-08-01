@@ -1,0 +1,36 @@
+generated: '2026-07-20'
+method: searched
+source: https://github.com/PriorLabs
+packages:
+- language: python
+  registry: pypi
+  name: tabpfn-client
+  version: 0.3.3
+  url: https://pypi.org/project/tabpfn-client/
+  repo: https://github.com/PriorLabs/tabpfn-client
+  install: pip install tabpfn-client
+  description: Easy cloud API access to the TabPFN tabular foundation model (TabPFNClassifier / TabPFNRegressor) — wraps the api.priorlabs.ai REST routes with a scikit-learn surface.
+  official: true
+- language: python
+  registry: pypi
+  name: tabpfn
+  version: 8.1.0
+  url: https://pypi.org/project/tabpfn/
+  repo: https://github.com/PriorLabs/tabpfn
+  install: pip install tabpfn
+  description: TabPFN foundation model for tabular data — local/in-process inference (scikit-learn compatible).
+  official: true
+- language: r
+  registry: github
+  name: R-tabpfn
+  url: https://github.com/PriorLabs/R-tabpfn
+  repo: https://github.com/PriorLabs/R-tabpfn
+  description: R language bindings for TabPFN.
+  official: true
+- language: python
+  registry: pypi
+  name: tabpfn-extensions
+  url: https://github.com/PriorLabs/tabpfn-extensions
+  install: pip install "tabpfn-extensions"
+  description: Community and first-party extensions for the TabPFN ecosystem (unsupervised, interpretability, etc.).
+  official: true

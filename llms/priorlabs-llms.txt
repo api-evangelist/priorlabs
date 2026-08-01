@@ -1,0 +1,63 @@
+# Prior Labs
+
+## Docs
+
+- [Model Context Protocol](https://docs.priorlabs.ai/agentic/mcp.md): Connect AI tools to TabPFN using the Model Context Protocol (MCP) for natural language predictions on tabular data.
+- [Setup Guide](https://docs.priorlabs.ai/agentic/setup-guide.md): Step-by-step instructions for connecting Claude, ChatGPT, Cursor, Codex CLI, and n8n to the TabPFN MCP server.
+- [Tool Use](https://docs.priorlabs.ai/agentic/tool-use.md): Reference for all tools exposed by the TabPFN MCP server.
+- [Databricks](https://docs.priorlabs.ai/agentic/tutorials/databricks.md): Build a customer churn prediction pipeline using an AI agent, TabPFN MCP, and Databricks Delta tables.
+- [TabPFN Skill for Claude](https://docs.priorlabs.ai/agentic/tutorials/mcp-claude-skills.md)
+- [n8n](https://docs.priorlabs.ai/agentic/tutorials/n8n.md): Build an n8n chat workflow that accepts CSV uploads and runs TabPFN predictions through MCP.
+- [REST API quickstart](https://docs.priorlabs.ai/api-reference/getting-started.md): Authenticate, upload data, fit a model, and predict using the TabPFN REST API.
+- [API metering](https://docs.priorlabs.ai/api-reference/metering.md): How TabPFN API usage is metered — token pools, thinking fit quotas, and dataset limits.
+- [Predict (TabPFN JSON API)](https://docs.priorlabs.ai/api-reference/prediction/predict-tabpfn-json-api.md): **Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.
+- [Prepare test set upload](https://docs.priorlabs.ai/api-reference/prediction/prepare-test-set-upload.md): **Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.
+- [Run Predictions](https://docs.priorlabs.ai/api-reference/prediction/run-predictions.md): **Deprecated:** Prefer `tabpfn-client` or `POST /tabpfn/predict`. See the [TabPFN-3 changelog](/changelog/tabpfn-3).
+- [Security](https://docs.priorlabs.ai/api-reference/security.md): How Prior Labs protects your data — encryption, isolation, and access controls.
+- [Fit a Model](https://docs.priorlabs.ai/api-reference/training/fit-a-model.md): **Deprecated:** Prefer the TabPFN client (`tabpfn-client`) or `POST /tabpfn/fit` after preparing uploads. This multipart `/v1/fit` surface is legacy. See the [TabPFN-3 changelog](/changelog/tabpfn-3).
+- [Fit (TabPFN JSON API)](https://docs.priorlabs.ai/api-reference/training/fit-tabpfn-json-api.md): **Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.
+- [Get model limits](https://docs.priorlabs.ai/api-reference/training/get-model-limits.md): **Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.
+- [Prepare train set upload](https://docs.priorlabs.ai/api-reference/training/prepare-train-set-upload.md): **Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.
+- [Benchmarking TabPFN](https://docs.priorlabs.ai/benchmarking.md): An end-to-end Python walkthrough for benchmarking TabPFN against other tabular models.
+- [Anomaly Detection](https://docs.priorlabs.ai/capabilities/anomaly-detection.md): Detect rare and anomalous samples using TabPFN’s unsupervised extension.
+- [Classification](https://docs.priorlabs.ai/capabilities/classification.md): Learn about TabPFN's classification capabilities.
+- [Data Generation](https://docs.priorlabs.ai/capabilities/data-generation.md): Generate realistic synthetic tabular data with TabPFN in seconds.
+- [Embeddings](https://docs.priorlabs.ai/capabilities/embeddings.md): Extract latent feature representations from TabPFN models.
+- [Fine-Tuning](https://docs.priorlabs.ai/capabilities/fine-tuning.md): Adapt TabPFN's pretrained foundation model to your data with gradient-based fine-tuning.
+- [Time Series Forecasting](https://docs.priorlabs.ai/capabilities/forecasting.md): Learn about TabPFN's time series forecasting capabilities
+- [Interpretability](https://docs.priorlabs.ai/capabilities/interpretability.md): Explain TabPFN predictions with Shapley values, feature interactions, and partial dependence plots.
+- [Many Class Classifier](https://docs.priorlabs.ai/capabilities/many-class.md): Learn about classification with TabPFN for large number of classes.
+- [Predictive Distribution](https://docs.priorlabs.ai/capabilities/predictive-distribution.md): Access TabPFN's full predictive distribution for uncertainty quantification.
+- [Regression](https://docs.priorlabs.ai/capabilities/regression.md): Learn about TabPFN's regression capabilities.
+- [Thinking mode](https://docs.priorlabs.ai/capabilities/thinking-mode.md): Inference-time compute scaling for TabPFN — better predictions by spending more time at fit.
+- [Changelog](https://docs.priorlabs.ai/changelog.md): What's new in TabPFN.
+- [TabPFN-3](https://docs.priorlabs.ai/changelog/tabpfn-3.md): What's new in TabPFN-3 — scale, capabilities, API, client, and migration guidance.
+- [TabPFN with MLflow](https://docs.priorlabs.ai/cookbooks/mlflow.md): Learn how to wrap TabPFN as an MLflow PythonModel, register it to Unity Catalog, and deploy it to a Mosaic AI Model serving endpoint.
+- [FAQ](https://docs.priorlabs.ai/faq.md)
+- [Accessing Model Weights](https://docs.priorlabs.ai/how-to-access-gated-models.md)
+- [Improving Performance](https://docs.priorlabs.ai/improving-performance.md): Practical strategies to improve TabPFN performance beyond the default configuration.
+- [Feature Engineering](https://docs.priorlabs.ai/improving-performance/feature-engineering.md): Encode domain knowledge into features that TabPFN cannot learn from raw columns alone.
+- [Feature Selection](https://docs.priorlabs.ai/improving-performance/feature-selection.md): Reduce feature count to improve TabPFN's attention efficiency and predictive power.
+- [Model Parameters](https://docs.priorlabs.ai/improving-performance/model-parameters.md): Tune TabPFN's softmax temperature, metric optimization, and class imbalance handling.
+- [Preprocessing Transforms](https://docs.priorlabs.ai/improving-performance/preprocessing.md): Configure TabPFN's internal preprocessing pipeline for maximum ensemble diversity.
+- [Microsoft Foundry](https://docs.priorlabs.ai/integrations/foundry.md): Access TabPFN in your secure Azure environment.
+- [Amazon SageMaker](https://docs.priorlabs.ai/integrations/sagemaker.md): Deploy TabPFN-3-Plus on Amazon SageMaker. Data stays inside your AWS account; the tabpfn-client Python SDK wraps the endpoint with a familiar scikit-learn surface.
+- [Models](https://docs.priorlabs.ai/models.md): Compare TabPFN model versions — capabilities, limits, and availability.
+- [Overview](https://docs.priorlabs.ai/overview.md): A tabular foundation model that delivers strong predictions in seconds — no dataset-specific training required.
+- [Quickstart](https://docs.priorlabs.ai/quickstart.md): Get started with TabPFN in minutes.
+- [OOM (Out of Memory) Error](https://docs.priorlabs.ai/troubleshooting/OOM-errors.md): How to handle CUDA and MPS out-of-memory errors when running TabPFN on large datasets.
+- [Energy](https://docs.priorlabs.ai/use-cases/energy.md)
+- [Finance](https://docs.priorlabs.ai/use-cases/finance.md)
+- [Healthcare](https://docs.priorlabs.ai/use-cases/healthcare.md)
+- [Industrials](https://docs.priorlabs.ai/use-cases/industrial.md)
+
+## OpenAPI Specs
+
+- [openapi](https://docs.priorlabs.ai/api-reference/openapi.json)
+
+## Optional
+
+- [GitHub](https://github.com/priorlabs/tabpfn)
+- [Discord](https://discord.com/invite/VJRuU3bSxt)
+- [Colab Demo](https://colab.research.google.com/github/PriorLabs/TabPFN/blob/main/examples/notebooks/TabPFN_Demo_Local.ipynb)
+- [Blog](https://priorlabs.ai/blog#articles)

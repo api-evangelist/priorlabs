@@ -1,0 +1,20 @@
+generated: '2026-07-20'
+method: searched
+source: https://docs.priorlabs.ai/changelog/tabpfn-3
+versioning:
+  scheme: uri-path
+  current: /tabpfn/*
+  legacy: /v1/*
+  api_version: 2.0.0
+  docs: https://docs.priorlabs.ai/changelog/tabpfn-3
+deprecation:
+  policy: The legacy /v1/fit and /v1/predict multipart surface is deprecated in favor of the /tabpfn/* JSON API and the tabpfn-client SDK.
+  docs: https://docs.priorlabs.ai/changelog/tabpfn-3
+deprecated_operations:
+- openapi/priorlabs-openapi-original.json#fit_v1_deprecated
+- openapi/priorlabs-openapi-original.json#predict_v1_deprecated
+models:
+  docs: https://docs.priorlabs.ai/models
+  current: TabPFN-3
+status_page: null
+sla: null

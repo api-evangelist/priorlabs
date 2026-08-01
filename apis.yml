@@ -1,9 +1,28 @@
 aid: priorlabs
-name: priorlabs
-description: priorlabs is a company surfaced as a portfolio company of balderton-capital and added to
-  the API Evangelist network as a stub for enrichment. This profile is a lead awaiting the enrichment
-  pipeline.
+name: Prior Labs
+description: >-
+  Prior Labs builds TabPFN, a tabular foundation model that delivers strong predictions on
+  structured/tabular data in seconds — no dataset-specific training, tuning, or ML pipelines
+  required. TabPFN-3 handles classification, regression, time-series forecasting, anomaly
+  detection, synthetic data generation, embeddings, and uncertainty quantification via in-context
+  learning, scaling to 1M rows, 2,000 columns, and 160 classes. Prior Labs exposes TabPFN through
+  a cloud REST API (api.priorlabs.ai), Python and R client SDKs, a Model Context Protocol server
+  for AI agents, and private deployments on AWS SageMaker, Databricks, and Azure AI Foundry. The
+  company was published in Nature and is now part of SAP.
 url: https://raw.githubusercontent.com/api-evangelist/priorlabs/refs/heads/main/apis.yml
+accessModel:
+  pricing: unknown
+  onboarding: self-serve
+  trial: false
+  try_now: false
+  public: false
+  label: Self-serve signup
+  confidence: medium
+  source:
+  - authentication
+  generated: '2026-07-22'
+  method: derived
+image: https://priorlabs.ai/pl.svg
 x-type: company
 x-source: vc-portfolio
 x-backed-by:
@@ -12,15 +31,106 @@ x-tier: stub
 x-tier-reason: portfolio-lead
 specificationVersion: '0.20'
 created: '2026-07-17'
-modified: '2026-07-17'
+modified: '2026-07-20'
 tags:
 - Company
-apis: []
+- Machine Learning
+- Artificial Intelligence
+- Tabular Data
+- Foundation Models
+- Predictions
+- Data Science
+- MCP
+- SDK
+apis:
+- aid: priorlabs:priorlabs-prediction-api
+  name: Prior Labs Prediction API
+  description: The Prediction API from Prior Labs — 3 operation(s) for prediction.
+  humanURL: https://docs.priorlabs.ai/api-reference/getting-started
+  baseURL: https://api.priorlabs.ai
+  tags:
+  - Prediction
+  properties:
+  - type: OpenAPI
+    url: openapi/priorlabs-prediction-api-openapi.yml
+  - type: APIReference
+    url: https://docs.priorlabs.ai/api-reference/getting-started
+- aid: priorlabs:priorlabs-training-api
+  name: Prior Labs Training API
+  description: The Training API from Prior Labs — 4 operation(s) for training.
+  humanURL: https://docs.priorlabs.ai/api-reference/getting-started
+  baseURL: https://api.priorlabs.ai
+  tags:
+  - Training
+  properties:
+  - type: OpenAPI
+    url: openapi/priorlabs-training-api-openapi.yml
+  - type: APIReference
+    url: https://docs.priorlabs.ai/api-reference/getting-started
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: Documentation
+  url: https://docs.priorlabs.ai/overview
+- type: DeveloperPortal
+  url: https://docs.priorlabs.ai/
+- type: APIReference
+  url: https://docs.priorlabs.ai/api-reference/getting-started
+- type: GettingStarted
+  url: https://docs.priorlabs.ai/quickstart
+- type: Blog
+  url: https://priorlabs.ai/blog
+- type: GitHubOrganization
+  url: https://github.com/PriorLabs
+- type: SignUp
+  url: https://ux.priorlabs.ai/home
+- type: TermsOfService
+  url: https://priorlabs.ai/terms
+- type: PrivacyPolicy
+  url: https://priorlabs.ai/privacy-policy
+- type: Support
+  url: mailto:hello@priorlabs.ai
+- type: ChangeLog
+  url: https://docs.priorlabs.ai/changelog
+- type: OpenAPI
+  url: openapi/priorlabs-openapi-original.json
+- type: Overlay
+  url: overlays/priorlabs-tabpfn-overlay.yaml
+- type: MCPServer
+  url: mcp/priorlabs-mcp.yml
+- type: LLMsTxt
+  url: llms/priorlabs-llms.txt
+- type: Packages
+  url: packages/priorlabs-packages.yml
+- type: SDKs
+  url: packages/priorlabs-packages.yml
+- type: AgentSkill
+  url: skills/_index.yml
+- type: Authentication
+  url: authentication/priorlabs-authentication.yml
+- type: Conventions
+  url: conventions/priorlabs-conventions.yml
+- type: ErrorCatalog
+  url: errors/priorlabs-problem-types.yml
+- type: Lifecycle
+  url: lifecycle/priorlabs-lifecycle.yml
+- type: Deprecation
+  url: lifecycle/priorlabs-lifecycle.yml
+- type: DataModel
+  url: data-model/priorlabs-data-model.yml
+- type: Conformance
+  url: conformance/priorlabs-conformance.yml
+- type: AgenticAccess
+  url: agentic-access/priorlabs-agentic-access.yml
+- type: DomainSecurity
+  url: security/priorlabs-domain-security.yml
 - type: Website
   url: https://priorlabs.ai/
+x-enrichment:
+  date: '2026-07-20'
+  status: enriched
+  artifacts_added: 17
+  pass: local-v1

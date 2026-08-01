@@ -1,0 +1,16 @@
+{
+  "provider": "priorlabs",
+  "sources": [
+    "priorlabs-prediction-api-openapi.yml",
+    "priorlabs-training-api-openapi.yml"
+  ],
+  "outputs": [
+    "priorlabs-prediction-api-openapi.yml",
+    "priorlabs-training-api-openapi.yml"
+  ],
+  "archived": [],
+  "errors": [],
+  "warnings": [],
+  "notes": [],
+  "skipped": []
+}
