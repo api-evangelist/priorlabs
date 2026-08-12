@@ -96,7 +96,7 @@ common:
 - type: ChangeLog
   url: https://docs.priorlabs.ai/changelog
 - type: OpenAPI
-  url: openapi/priorlabs-openapi-original.json
+  url: openapi/_original/priorlabs-openapi-original.json
 - type: Overlay
   url: overlays/priorlabs-tabpfn-overlay.yaml
 - type: MCPServer
