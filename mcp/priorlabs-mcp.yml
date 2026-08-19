@@ -10,7 +10,8 @@ server:
     methods:
     - oauth
     - bearer
-    note: Claude.ai / Claude Desktop / ChatGPT / Codex CLI / Cursor use OAuth; manual config accepts an Authorization Bearer API key from ux.priorlabs.ai.
+    note: Claude.ai / Claude Desktop / ChatGPT / Codex CLI / Cursor use OAuth; manual config accepts an
+      Authorization Bearer API key from ux.priorlabs.ai.
   install:
     claude_code: claude mcp add --transport http tabpfn https://api.priorlabs.ai/mcp/server
 docs:
@@ -19,12 +20,21 @@ docs:
   overview: https://docs.priorlabs.ai/agentic/mcp.md
 tools:
 - name: upload_dataset
-  description: Obtain a secure upload URL for training or test data; returns a dataset_id valid for 60 minutes.
+  description: Obtain a secure upload URL for training or test data; returns a dataset_id valid for 60
+    minutes.
 - name: fit_and_predict_from_dataset
   description: Fit the TabPFN model on pre-uploaded data and generate predictions.
 - name: predict_from_dataset
   description: Run predictions with an existing fitted model against a new uploaded test dataset.
 - name: fit_and_predict_inline
-  description: Train a model directly from inline data arrays and immediately return predictions plus a model ID.
+  description: Train a model directly from inline data arrays and immediately return predictions plus
+    a model ID.
 - name: predict_inline
   description: Generate predictions from a previously fitted model given a model ID and inline test features.
+deployment:
+  mode: remote
+  endpoint: https://api.priorlabs.ai/mcp/server
+  verified: probed
+  probe: gated
+  checked: '2026-08-12'
+  source: catalog MCP census

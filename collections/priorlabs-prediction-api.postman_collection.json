@@ -1,0 +1,917 @@
+{
+  "item": [
+    {
+      "id": "19795545-bef9-45ea-b0ea-c55abb68f353",
+      "name": "Prediction",
+      "description": {
+        "content": "",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "bbf1f39a-dff6-4751-9016-9bbf91da3aff",
+          "name": "Prepare test set upload",
+          "request": {
+            "name": "Prepare test set upload",
+            "description": {
+              "content": "**Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.\n\nAfter fit: pass `fitted_train_set_id` and `x_test_info`; receive `test_set_upload_id` and signed URLs for test features.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "tabpfn",
+                "prepare_test_set_upload"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bearerToken}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fitted_train_set_id\": \"<uuid>\",\n  \"x_test_info\": {\n    \"format\": \"<string>\",\n    \"hash\": \"<string>\",\n    \"size_bytes\": \"<integer>\",\n    \"use_chunks\": false\n  },\n  \"force_reupload\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "1540d137-817e-47d3-ac04-6620ddb766cc",
+              "name": "Test upload id and signed URLs",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "tabpfn",
+                    "prepare_test_set_upload"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fitted_train_set_id\": \"323e4567-e89b-12d3-a456-426614174000\",\n  \"x_test_info\": {\n    \"filename\": \"X_test.csv\",\n    \"size_bytes\": 512,\n    \"content_hash\": \"ghi\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"test_set_upload_id\": \"3d663490-ba04-9a7f-79e6-e9d780ea8869\",\n  \"x_test_info\": {\n    \"signed_urls\": [\n      \"string\"\n    ],\n    \"expires_at\": 8228.38625236233,\n    \"required_headers\": {\n      \"key_0\": \"string\"\n    }\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "48cae12a-4756-4da0-a8b4-e5c5a37d71f0",
+          "name": "Predict (TabPFN JSON API)",
+          "request": {
+            "name": "Predict (TabPFN JSON API)",
+            "description": {
+              "content": "**Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.\n\nJSON body after `POST /tabpfn/prepare_test_set_upload` and file upload. Fields: `test_set_upload_id`, `fitted_train_set_id` (from `/tabpfn/fit`), `task_config` (task + tabpfn config), optional `force_refit`.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "tabpfn",
+                "predict"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bearerToken}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"test_set_upload_id\": \"<uuid>\",\n  \"fitted_train_set_id\": \"<uuid>\",\n  \"task_config\": {\n    \"task\": \"classification\",\n    \"tabpfn_config\": {\n      \"n_estimators\": \"<integer>\",\n      \"categorical_features_indices\": [\n        \"<integer>\",\n        \"<integer>\"\n      ],\n      \"softmax_temperature\": \"<number>\",\n      \"average_before_softmax\": \"<boolean>\",\n      \"random_state\": \"<integer>\",\n      \"inference_config\": {\n        \"key_0\": 1264.3526959135866,\n        \"key_1\": false\n      },\n      \"ignore_pretraining_limits\": true,\n      \"n_preprocessing_jobs\": 4,\n      \"inference_precision\": \"auto\",\n      \"fit_mode\": \"fit_preprocessors\",\n      \"device\": [\n        \"<string>\"\n      ],\n      \"memory_saving_mode\": \"<boolean>\",\n      \"model_path\": \"<string>\",\n      \"balance_probabilities\": \"<boolean>\"\n    },\n    \"predict_params\": {\n      \"output_type\": \"probas\"\n    }\n  },\n  \"force_refit\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "f06dc5c1-2ecd-49d3-bec0-5f196c19b09d",
+              "name": "Prediction payload + metadata.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "tabpfn",
+                    "predict"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"test_set_upload_id\": \"223e4567-e89b-12d3-a456-426614174000\",\n  \"fitted_train_set_id\": \"323e4567-e89b-12d3-a456-426614174000\",\n  \"task_config\": {\n    \"task\": \"classification\",\n    \"tabpfn_config\": {\n      \"model_path\": \"auto\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"prediction\": [],\n  \"metadata\": {\n    \"test_set_num_rows\": 3539,\n    \"test_set_num_cols\": 4789,\n    \"package_version\": \"string\",\n    \"tabpfn_config\": {\n      \"n_estimators\": 5,\n      \"categorical_features_indices\": [\n        4859,\n        8025\n      ],\n      \"softmax_temperature\": 120.81321733722005,\n      \"average_before_softmax\": true,\n      \"random_state\": 7581,\n      \"inference_config\": {\n        \"key_0\": false\n      },\n      \"ignore_pretraining_limits\": true,\n      \"n_preprocessing_jobs\": 4,\n      \"inference_precision\": \"auto\",\n      \"fit_mode\": \"fit_preprocessors\",\n      \"device\": [\n        \"string\"\n      ],\n      \"memory_saving_mode\": true,\n      \"model_path\": \"string\",\n      \"balance_probabilities\": true\n    },\n    \"task\": \"classification\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "edd20509-fb56-4ac0-908f-1fb4634ec09c",
+              "name": "Unauthorized — authentication required or credentials invalid.\n\n**Possible causes:**\n- Missing or malformed `Authorization` header\n- Invalid or expired JWT token\n- User not found (token references a deleted account)\n- JWT decode errors (JWEDecodeError, JWTDecodeError, JWTClaimsError)\n\n**Examples:**\n- Missing token: `{\"detail\": \"Not authenticated\"}`\n- Invalid credentials: `{\"detail\": \"Could not validate credentials\"}`",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "tabpfn",
+                    "predict"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"test_set_upload_id\": \"223e4567-e89b-12d3-a456-426614174000\",\n  \"fitted_train_set_id\": \"323e4567-e89b-12d3-a456-426614174000\",\n  \"task_config\": {\n    \"task\": \"classification\",\n    \"tabpfn_config\": {\n      \"model_path\": \"auto\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"auth.unauthorized\",\n  \"detail\": \"Not authenticated\",\n  \"retryable\": false,\n  \"support\": \"https://discord.com/invite/VJRuU3bSxt\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "a613c5b6-48b7-4b16-ab59-2406cb667bcb",
+              "name": "Model not found — the provided model ID does not exist or has expired.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "tabpfn",
+                    "predict"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"test_set_upload_id\": \"223e4567-e89b-12d3-a456-426614174000\",\n  \"fitted_train_set_id\": \"323e4567-e89b-12d3-a456-426614174000\",\n  \"task_config\": {\n    \"task\": \"classification\",\n    \"tabpfn_config\": {\n      \"model_path\": \"auto\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"error.not_found\",\n  \"detail\": \"Fitted model with ID 123e4567-e89b-12d3-a456-426614174000 not found\",\n  \"retryable\": false,\n  \"support\": \"https://discord.com/invite/VJRuU3bSxt\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "3fb92908-6473-4f7d-ab58-4f8b1dd91dba",
+              "name": "Validation error — one or more fields are incorrectly formatted.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "tabpfn",
+                    "predict"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"test_set_upload_id\": \"223e4567-e89b-12d3-a456-426614174000\",\n  \"fitted_train_set_id\": \"323e4567-e89b-12d3-a456-426614174000\",\n  \"task_config\": {\n    \"task\": \"classification\",\n    \"tabpfn_config\": {\n      \"model_path\": \"auto\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"validation.failed\",\n  \"detail\": \"Validation error for FitRequest\",\n  \"errors\": [\n    {\n      \"field\": \"task\",\n      \"message\": \"field required\"\n    },\n    {\n      \"field\": \"systems\",\n      \"message\": \"Invalid system: invalid_system. Must be one of: ['preprocessing', 'text']\"\n    }\n  ],\n  \"retryable\": false,\n  \"support\": \"https://discord.com/invite/VJRuU3bSxt\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "2825260d-8821-457e-98a6-8cbcb78ef249",
+              "name": "Quota exceeded.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "tabpfn",
+                    "predict"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"test_set_upload_id\": \"223e4567-e89b-12d3-a456-426614174000\",\n  \"fitted_train_set_id\": \"323e4567-e89b-12d3-a456-426614174000\",\n  \"task_config\": {\n    \"task\": \"classification\",\n    \"tabpfn_config\": {\n      \"model_path\": \"auto\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "33e6cfc4-b1e0-4ebf-a8ec-7673e2fafe1b",
+          "name": "Run Predictions",
+          "request": {
+            "name": "Run Predictions",
+            "description": {
+              "content": "**Deprecated:** Prefer `tabpfn-client` or `POST /tabpfn/predict`. See the [TabPFN-3 changelog](/changelog/tabpfn-3).\n\nRun inference using a previously fitted TabPFN model. Upload your test dataset and specify the model ID from your previous `/v1/fit` call. The endpoint returns predicted probabilities or values depending on the task type.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "v1",
+                "predict"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bearerToken}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "data",
+                  "value": "<string>",
+                  "type": "text",
+                  "description": "(Required) A JSON string defining the prediction request parameters.\n\n**Required fields:**\n- `model_id` (`str`) - Model ID from your previous `/v1/fit` call\n- `task` (`str`) - Task type: `\"classification\"` or `\"regression\"`\n\n**Optional Config Parameters:**\n- `systems` (`list[str]`) - default: `[\"preprocessing\", \"text\"]`. \n**The following preprocessing systems are supported**: \n     - `[\"preprocessing\"]` - Applies skrub preprocessing, \n   - `[\"text\"]` - Adds text embeddings for text columns. \n- `n_estimators` (`int`) - Number of estimators in the ensemble (1-10)\n- `model_path` (`str`) - Model checkpoint path from [HuggingFace](https://huggingface.co/Prior-Labs/tabpfn_3/tree/main)\n- `categorical_features_indices` (`List[int]`) - Indices of categorical features\n- `softmax_temperature` (`float`) - Temperature for softmax scaling\n- `average_before_softmax` (`bool`) - Average before applying softmax\n- `ignore_pretraining_limits` (`bool`) - Ignore pretraining limits\n- `inference_precision` (`str`) - Inference precision (\"float32\", \"float16\", \"auto\")\n- `random_state` (`int`) - Random seed for reproducibility\n- `balance_probabilities` (`bool`) - Balance class probabilities\n\n**Optional Params (output configuration):**\n- `output_type` (`str`) - Determines prediction output format\n  - Classification: `\"probas\"` (default, probabilities) or `\"preds\"` (predictions)\n  - Regression: `\"mean\"` (default, mean value) or `\"full\"` (includes quantiles, ei, pi)"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "description": "(Required) CSV file containing the dataset to predict on."
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "2d50227b-4ebf-4a7a-af41-8b62f21a8e53",
+              "name": "Prediction completed successfully — returns predicted values or probabilities depending on the task.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "predict"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "description": {
+                        "content": "(Required) A JSON string defining the prediction request parameters.\n\n**Required fields:**\n- `model_id` (`str`) - Model ID from your previous `/v1/fit` call\n- `task` (`str`) - Task type: `\"classification\"` or `\"regression\"`\n\n**Optional Config Parameters:**\n- `systems` (`list[str]`) - default: `[\"preprocessing\", \"text\"]`. \n**The following preprocessing systems are supported**: \n     - `[\"preprocessing\"]` - Applies skrub preprocessing, \n   - `[\"text\"]` - Adds text embeddings for text columns. \n- `n_estimators` (`int`) - Number of estimators in the ensemble (1-10)\n- `model_path` (`str`) - Model checkpoint path from [HuggingFace](https://huggingface.co/Prior-Labs/tabpfn_3/tree/main)\n- `categorical_features_indices` (`List[int]`) - Indices of categorical features\n- `softmax_temperature` (`float`) - Temperature for softmax scaling\n- `average_before_softmax` (`bool`) - Average before applying softmax\n- `ignore_pretraining_limits` (`bool`) - Ignore pretraining limits\n- `inference_precision` (`str`) - Inference precision (\"float32\", \"float16\", \"auto\")\n- `random_state` (`int`) - Random seed for reproducibility\n- `balance_probabilities` (`bool`) - Balance class probabilities\n\n**Optional Params (output configuration):**\n- `output_type` (`str`) - Determines prediction output format\n  - Classification: `\"probas\"` (default, probabilities) or `\"preds\"` (predictions)\n  - Regression: `\"mean\"` (default, mean value) or `\"full\"` (includes quantiles, ei, pi)",
+                        "type": "text/plain"
+                      },
+                      "key": "data",
+                      "value": "{\"model_id\": \"123e4567-e89b-12d3-a456-426614174000\", \"task\": \"classification\", \"params\": {\"output_type\": \"probabilities\"}}",
+                      "type": "text"
+                    },
+                    {
+                      "description": {
+                        "content": "(Required) CSV file containing the dataset to predict on.",
+                        "type": "text/plain"
+                      },
+                      "key": "file",
+                      "type": "file"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"duration_seconds\": 15,\n  \"prediction\": [\n    [\n      0.1,\n      0.9\n    ],\n    [\n      0.8,\n      0.2\n    ]\n  ],\n  \"task\": \"classification\",\n  \"params\": {\n    \"average_before_softmax\": false,\n    \"categorical_features_indices\": null,\n    \"device\": [\n      \"cpu\"\n    ],\n    \"differentiable_input\": false,\n    \"fit_mode\": \"fit_preprocessors\",\n    \"ignore_pretraining_limits\": true,\n    \"inference_config\": null,\n    \"inference_precision\": \"auto\",\n    \"memory_saving_mode\": true,\n    \"model_path\": \"auto\",\n    \"n_estimators\": 8,\n    \"n_jobs\": null,\n    \"n_preprocessing_jobs\": 4,\n    \"random_state\": 42,\n    \"softmax_temperature\": 0.2\n  },\n  \"used_credits\": 10,\n  \"remaining_quota\": 90\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "ebea0eba-635a-488c-864d-e80ca9efd89b",
+              "name": "Invalid request — dataset file missing or malformed input.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "predict"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "description": {
+                        "content": "(Required) A JSON string defining the prediction request parameters.\n\n**Required fields:**\n- `model_id` (`str`) - Model ID from your previous `/v1/fit` call\n- `task` (`str`) - Task type: `\"classification\"` or `\"regression\"`\n\n**Optional Config Parameters:**\n- `systems` (`list[str]`) - default: `[\"preprocessing\", \"text\"]`. \n**The following preprocessing systems are supported**: \n     - `[\"preprocessing\"]` - Applies skrub preprocessing, \n   - `[\"text\"]` - Adds text embeddings for text columns. \n- `n_estimators` (`int`) - Number of estimators in the ensemble (1-10)\n- `model_path` (`str`) - Model checkpoint path from [HuggingFace](https://huggingface.co/Prior-Labs/tabpfn_3/tree/main)\n- `categorical_features_indices` (`List[int]`) - Indices of categorical features\n- `softmax_temperature` (`float`) - Temperature for softmax scaling\n- `average_before_softmax` (`bool`) - Average before applying softmax\n- `ignore_pretraining_limits` (`bool`) - Ignore pretraining limits\n- `inference_precision` (`str`) - Inference precision (\"float32\", \"float16\", \"auto\")\n- `random_state` (`int`) - Random seed for reproducibility\n- `balance_probabilities` (`bool`) - Balance class probabilities\n\n**Optional Params (output configuration):**\n- `output_type` (`str`) - Determines prediction output format\n  - Classification: `\"probas\"` (default, probabilities) or `\"preds\"` (predictions)\n  - Regression: `\"mean\"` (default, mean value) or `\"full\"` (includes quantiles, ei, pi)",
+                        "type": "text/plain"
+                      },
+                      "key": "data",
+                      "value": "{\"model_id\": \"123e4567-e89b-12d3-a456-426614174000\", \"task\": \"classification\", \"params\": {\"output_type\": \"probabilities\"}}",
+                      "type": "text"
+                    },
+                    {
+                      "description": {
+                        "content": "(Required) CSV file containing the dataset to predict on.",
+                        "type": "text/plain"
+                      },
+                      "key": "file",
+                      "type": "file"
+                    }
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"error.bad_request\",\n  \"detail\": \"You must upload a dataset `file` for prediction.\",\n  \"retryable\": false,\n  \"support\": \"https://discord.com/invite/VJRuU3bSxt\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "62b308ba-7178-4ac2-afd0-30ea095cff29",
+              "name": "Unauthorized — authentication required or credentials invalid.\n\n**Possible causes:**\n- Missing or malformed `Authorization` header\n- Invalid or expired JWT token\n- User not found (token references a deleted account)\n- JWT decode errors",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "predict"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "description": {
+                        "content": "(Required) A JSON string defining the prediction request parameters.\n\n**Required fields:**\n- `model_id` (`str`) - Model ID from your previous `/v1/fit` call\n- `task` (`str`) - Task type: `\"classification\"` or `\"regression\"`\n\n**Optional Config Parameters:**\n- `systems` (`list[str]`) - default: `[\"preprocessing\", \"text\"]`. \n**The following preprocessing systems are supported**: \n     - `[\"preprocessing\"]` - Applies skrub preprocessing, \n   - `[\"text\"]` - Adds text embeddings for text columns. \n- `n_estimators` (`int`) - Number of estimators in the ensemble (1-10)\n- `model_path` (`str`) - Model checkpoint path from [HuggingFace](https://huggingface.co/Prior-Labs/tabpfn_3/tree/main)\n- `categorical_features_indices` (`List[int]`) - Indices of categorical features\n- `softmax_temperature` (`float`) - Temperature for softmax scaling\n- `average_before_softmax` (`bool`) - Average before applying softmax\n- `ignore_pretraining_limits` (`bool`) - Ignore pretraining limits\n- `inference_precision` (`str`) - Inference precision (\"float32\", \"float16\", \"auto\")\n- `random_state` (`int`) - Random seed for reproducibility\n- `balance_probabilities` (`bool`) - Balance class probabilities\n\n**Optional Params (output configuration):**\n- `output_type` (`str`) - Determines prediction output format\n  - Classification: `\"probas\"` (default, probabilities) or `\"preds\"` (predictions)\n  - Regression: `\"mean\"` (default, mean value) or `\"full\"` (includes quantiles, ei, pi)",
+                        "type": "text/plain"
+                      },
+                      "key": "data",
+                      "value": "{\"model_id\": \"123e4567-e89b-12d3-a456-426614174000\", \"task\": \"classification\", \"params\": {\"output_type\": \"probabilities\"}}",
+                      "type": "text"
+                    },
+                    {
+                      "description": {
+                        "content": "(Required) CSV file containing the dataset to predict on.",
+                        "type": "text/plain"
+                      },
+                      "key": "file",
+                      "type": "file"
+                    }
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"auth.unauthorized\",\n  \"detail\": \"Not authenticated\",\n  \"retryable\": false,\n  \"support\": \"https://discord.com/invite/VJRuU3bSxt\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "3f915a09-afd7-464e-a66e-0d082b573415",
+              "name": "Forbidden — user account not verified or insufficient permissions.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "predict"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "description": {
+                        "content": "(Required) A JSON string defining the prediction request parameters.\n\n**Required fields:**\n- `model_id` (`str`) - Model ID from your previous `/v1/fit` call\n- `task` (`str`) - Task type: `\"classification\"` or `\"regression\"`\n\n**Optional Config Parameters:**\n- `systems` (`list[str]`) - default: `[\"preprocessing\", \"text\"]`. \n**The following preprocessing systems are supported**: \n     - `[\"preprocessing\"]` - Applies skrub preprocessing, \n   - `[\"text\"]` - Adds text embeddings for text columns. \n- `n_estimators` (`int`) - Number of estimators in the ensemble (1-10)\n- `model_path` (`str`) - Model checkpoint path from [HuggingFace](https://huggingface.co/Prior-Labs/tabpfn_3/tree/main)\n- `categorical_features_indices` (`List[int]`) - Indices of categorical features\n- `softmax_temperature` (`float`) - Temperature for softmax scaling\n- `average_before_softmax` (`bool`) - Average before applying softmax\n- `ignore_pretraining_limits` (`bool`) - Ignore pretraining limits\n- `inference_precision` (`str`) - Inference precision (\"float32\", \"float16\", \"auto\")\n- `random_state` (`int`) - Random seed for reproducibility\n- `balance_probabilities` (`bool`) - Balance class probabilities\n\n**Optional Params (output configuration):**\n- `output_type` (`str`) - Determines prediction output format\n  - Classification: `\"probas\"` (default, probabilities) or `\"preds\"` (predictions)\n  - Regression: `\"mean\"` (default, mean value) or `\"full\"` (includes quantiles, ei, pi)",
+                        "type": "text/plain"
+                      },
+                      "key": "data",
+                      "value": "{\"model_id\": \"123e4567-e89b-12d3-a456-426614174000\", \"task\": \"classification\", \"params\": {\"output_type\": \"probabilities\"}}",
+                      "type": "text"
+                    },
+                    {
+                      "description": {
+                        "content": "(Required) CSV file containing the dataset to predict on.",
+                        "type": "text/plain"
+                      },
+                      "key": "file",
+                      "type": "file"
+                    }
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"auth.forbidden\",\n  \"detail\": \"User account not verified\",\n  \"retryable\": false,\n  \"support\": \"https://discord.com/invite/VJRuU3bSxt\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "622fadb8-76e5-449e-9f8a-baeeb6642cd1",
+              "name": "Model not found — the provided model ID does not exist or has expired.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "predict"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "description": {
+                        "content": "(Required) A JSON string defining the prediction request parameters.\n\n**Required fields:**\n- `model_id` (`str`) - Model ID from your previous `/v1/fit` call\n- `task` (`str`) - Task type: `\"classification\"` or `\"regression\"`\n\n**Optional Config Parameters:**\n- `systems` (`list[str]`) - default: `[\"preprocessing\", \"text\"]`. \n**The following preprocessing systems are supported**: \n     - `[\"preprocessing\"]` - Applies skrub preprocessing, \n   - `[\"text\"]` - Adds text embeddings for text columns. \n- `n_estimators` (`int`) - Number of estimators in the ensemble (1-10)\n- `model_path` (`str`) - Model checkpoint path from [HuggingFace](https://huggingface.co/Prior-Labs/tabpfn_3/tree/main)\n- `categorical_features_indices` (`List[int]`) - Indices of categorical features\n- `softmax_temperature` (`float`) - Temperature for softmax scaling\n- `average_before_softmax` (`bool`) - Average before applying softmax\n- `ignore_pretraining_limits` (`bool`) - Ignore pretraining limits\n- `inference_precision` (`str`) - Inference precision (\"float32\", \"float16\", \"auto\")\n- `random_state` (`int`) - Random seed for reproducibility\n- `balance_probabilities` (`bool`) - Balance class probabilities\n\n**Optional Params (output configuration):**\n- `output_type` (`str`) - Determines prediction output format\n  - Classification: `\"probas\"` (default, probabilities) or `\"preds\"` (predictions)\n  - Regression: `\"mean\"` (default, mean value) or `\"full\"` (includes quantiles, ei, pi)",
+                        "type": "text/plain"
+                      },
+                      "key": "data",
+                      "value": "{\"model_id\": \"123e4567-e89b-12d3-a456-426614174000\", \"task\": \"classification\", \"params\": {\"output_type\": \"probabilities\"}}",
+                      "type": "text"
+                    },
+                    {
+                      "description": {
+                        "content": "(Required) CSV file containing the dataset to predict on.",
+                        "type": "text/plain"
+                      },
+                      "key": "file",
+                      "type": "file"
+                    }
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"error.not_found\",\n  \"detail\": \"Fitted model with ID 123e4567-e89b-12d3-a456-426614174000 not found\",\n  \"retryable\": false,\n  \"support\": \"https://discord.com/invite/VJRuU3bSxt\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "312f18d7-93a3-4c08-ad39-79362a06dee2",
+              "name": "Validation error — incorrect or missing fields in the request.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "predict"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "description": {
+                        "content": "(Required) A JSON string defining the prediction request parameters.\n\n**Required fields:**\n- `model_id` (`str`) - Model ID from your previous `/v1/fit` call\n- `task` (`str`) - Task type: `\"classification\"` or `\"regression\"`\n\n**Optional Config Parameters:**\n- `systems` (`list[str]`) - default: `[\"preprocessing\", \"text\"]`. \n**The following preprocessing systems are supported**: \n     - `[\"preprocessing\"]` - Applies skrub preprocessing, \n   - `[\"text\"]` - Adds text embeddings for text columns. \n- `n_estimators` (`int`) - Number of estimators in the ensemble (1-10)\n- `model_path` (`str`) - Model checkpoint path from [HuggingFace](https://huggingface.co/Prior-Labs/tabpfn_3/tree/main)\n- `categorical_features_indices` (`List[int]`) - Indices of categorical features\n- `softmax_temperature` (`float`) - Temperature for softmax scaling\n- `average_before_softmax` (`bool`) - Average before applying softmax\n- `ignore_pretraining_limits` (`bool`) - Ignore pretraining limits\n- `inference_precision` (`str`) - Inference precision (\"float32\", \"float16\", \"auto\")\n- `random_state` (`int`) - Random seed for reproducibility\n- `balance_probabilities` (`bool`) - Balance class probabilities\n\n**Optional Params (output configuration):**\n- `output_type` (`str`) - Determines prediction output format\n  - Classification: `\"probas\"` (default, probabilities) or `\"preds\"` (predictions)\n  - Regression: `\"mean\"` (default, mean value) or `\"full\"` (includes quantiles, ei, pi)",
+                        "type": "text/plain"
+                      },
+                      "key": "data",
+                      "value": "{\"model_id\": \"123e4567-e89b-12d3-a456-426614174000\", \"task\": \"classification\", \"params\": {\"output_type\": \"probabilities\"}}",
+                      "type": "text"
+                    },
+                    {
+                      "description": {
+                        "content": "(Required) CSV file containing the dataset to predict on.",
+                        "type": "text/plain"
+                      },
+                      "key": "file",
+                      "type": "file"
+                    }
+                  ]
+                }
+              },
+              "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"validation.failed\",\n  \"detail\": \"Validation error for FitRequest\",\n  \"errors\": [\n    {\n      \"field\": \"task\",\n      \"message\": \"field required\"\n    },\n    {\n      \"field\": \"systems\",\n      \"message\": \"Invalid system: invalid_system. Must be one of: ['preprocessing', 'text']\"\n    }\n  ],\n  \"retryable\": false,\n  \"support\": \"https://discord.com/invite/VJRuU3bSxt\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "https://api.priorlabs.ai",
+      "key": "baseUrl"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bearerToken}}"
+      }
+    ]
+  },
+  "info": {
+    "_postman_id": "a42fd4e2-bb1f-41fb-b213-160363095e26",
+    "name": "TabPFN Prediction API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Prior Labs TabPFN API. **Prefer [tabpfn-client](https://github.com/PriorLabs/tabpfn-client)**. Current integration surface: **`/tabpfn/*` JSON routes** (prepare uploads, fit, predict, limits). **`/v1/*` multipart routes are deprecated.** See the [Changelog](/changelog).\n\nContact Support:\n Name: Prior Labs\n Email: hello@priorlabs.ai",
+      "type": "text/plain"
+    }
+  }
+}

@@ -1,0 +1,1076 @@
+{
+  "item": [
+    {
+      "id": "274d9914-6980-4217-a9de-f9bc55bbd593",
+      "name": "Training",
+      "description": {
+        "content": "",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "afa4e877-908f-4b05-931a-5869e9c6747e",
+          "name": "Prepare train set upload",
+          "request": {
+            "name": "Prepare train set upload",
+            "description": {
+              "content": "**Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.\n\nFirst step for TabPFN v2 flow: pass `x_train_info` / `y_train_info` metadata (name, size, hash); receive `train_set_upload_id` and signed upload URLs.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "tabpfn",
+                "prepare_train_set_upload"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bearerToken}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"x_train_info\": {\n    \"format\": \"<string>\",\n    \"hash\": \"<string>\",\n    \"size_bytes\": \"<integer>\",\n    \"use_chunks\": false\n  },\n  \"y_train_info\": {\n    \"format\": \"<string>\",\n    \"hash\": \"<string>\",\n    \"size_bytes\": \"<integer>\",\n    \"use_chunks\": false\n  },\n  \"description\": \"<string>\",\n  \"force_reupload\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "95e1f4a5-b0bf-4b33-93a8-a294988512f7",
+              "name": "Successful Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "tabpfn",
+                    "prepare_train_set_upload"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"x_train_info\": {\n    \"filename\": \"X_train.csv\",\n    \"size_bytes\": 1024,\n    \"content_hash\": \"abc\"\n  },\n  \"y_train_info\": {\n    \"filename\": \"y_train.csv\",\n    \"size_bytes\": 64,\n    \"content_hash\": \"def\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"train_set_upload_id\": \"cf40bdf7-3d37-e377-9d97-4e6290790de7\",\n  \"x_train_info\": {\n    \"signed_urls\": [\n      \"string\"\n    ],\n    \"expires_at\": 7532.00055983433,\n    \"required_headers\": {\n      \"key_0\": \"string\",\n      \"key_1\": \"string\"\n    }\n  },\n  \"y_train_info\": {\n    \"signed_urls\": [\n      \"string\"\n    ],\n    \"expires_at\": 2127.5943126716666,\n    \"required_headers\": {\n      \"key_0\": \"string\",\n      \"key_1\": \"string\"\n    }\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "1404ad3e-ff9e-4e07-b6f7-32eb2bc8b9e1",
+              "name": "Conflict",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "tabpfn",
+                    "prepare_train_set_upload"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"x_train_info\": {\n    \"filename\": \"X_train.csv\",\n    \"size_bytes\": 1024,\n    \"content_hash\": \"abc\"\n  },\n  \"y_train_info\": {\n    \"filename\": \"y_train.csv\",\n    \"size_bytes\": 64,\n    \"content_hash\": \"def\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"string\",\n  \"train_set_upload_id\": \"69bfe279-035b-4019-223e-cc2936ff4a08\",\n  \"error_code\": \"DUPLICATE_TRAIN_SET_UPLOAD\",\n  \"trace_id\": \"d63f1174-9bd1-e881-4a0a-dc9bf447dfaa\",\n  \"detail\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "20011e37-3b47-44f9-802e-f75553cdd318",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "tabpfn",
+                    "prepare_train_set_upload"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"x_train_info\": {\n    \"filename\": \"X_train.csv\",\n    \"size_bytes\": 1024,\n    \"content_hash\": \"abc\"\n  },\n  \"y_train_info\": {\n    \"filename\": \"y_train.csv\",\n    \"size_bytes\": 64,\n    \"content_hash\": \"def\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"auth.unauthorized\",\n  \"detail\": \"Invalid authentication credentials\",\n  \"retryable\": false,\n  \"support\": \"https://discord.com/invite/VJRuU3bSxt\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "f17912e1-05b2-4ddc-88fb-a21d68d2609e",
+          "name": "Get model limits",
+          "request": {
+            "name": "Get model limits",
+            "description": {
+              "content": "**Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.\n\nReturns `default_model_version`, per-version `model_limits` (rows, cells, classes, cols), and `dataset_max_size_bytes`. The client calls this to size-check before upload.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "tabpfn",
+                "get_model_limits"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bearerToken}}"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "de5c0c3d-b691-4a48-ae6b-ecffdc9b12c2",
+              "name": "Limits envelope",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "tabpfn",
+                    "get_model_limits"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"default_model_version\": \"v2.5\",\n  \"max_model_limit\": {\n    \"train_set_max_rows\": 2436,\n    \"train_set_max_cells\": 5551,\n    \"test_set_max_rows\": 2862,\n    \"max_classes\": 3859,\n    \"test_set_max_cells\": 7379,\n    \"max_cols\": 2000,\n    \"test_set_max_rows_w_full_regression_output\": 400\n  },\n  \"model_limits\": {\n    \"key_0\": {\n      \"train_set_max_rows\": 6165,\n      \"train_set_max_cells\": 9544,\n      \"test_set_max_rows\": 3193,\n      \"max_classes\": 8282,\n      \"test_set_max_cells\": 6431,\n      \"max_cols\": 2000,\n      \"test_set_max_rows_w_full_regression_output\": 400\n    },\n    \"key_1\": {\n      \"train_set_max_rows\": 5043,\n      \"train_set_max_cells\": 4943,\n      \"test_set_max_rows\": 2251,\n      \"max_classes\": 5490,\n      \"test_set_max_cells\": 5335,\n      \"max_cols\": 2000,\n      \"test_set_max_rows_w_full_regression_output\": 400\n    }\n  },\n  \"dataset_max_size_bytes\": 9369\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "c73d8d42-01e6-46b4-b9c0-025b0caf3359",
+              "name": "Unauthorized — authentication required or credentials invalid.\n\n**Possible causes:**\n- Missing or malformed `Authorization` header\n- Invalid or expired JWT token\n- User not found (token references a deleted account)\n- JWT decode errors (JWEDecodeError, JWTDecodeError, JWTClaimsError)\n\n**Examples:**\n- Missing token: `{\"detail\": \"Not authenticated\"}`\n- Invalid credentials: `{\"detail\": \"Could not validate credentials\"}`",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "tabpfn",
+                    "get_model_limits"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"auth.unauthorized\",\n  \"detail\": \"Not authenticated\",\n  \"retryable\": false,\n  \"support\": \"https://discord.com/invite/VJRuU3bSxt\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "97db5ece-73b3-4830-9fbe-a29d5336cc45",
+          "name": "Fit (TabPFN JSON API)",
+          "request": {
+            "name": "Fit (TabPFN JSON API)",
+            "description": {
+              "content": "**Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.\n\nJSON body after you upload train files via `POST /tabpfn/prepare_train_set_upload` and PUT the returned signed URLs. Returns `fitted_train_set_id`. Long fits may stream JSON with leading keepalive whitespace; see the [TabPFN-3 changelog](/changelog/tabpfn-3).\n\nKey fields: `train_set_upload_id` (UUID), `task` (`classification` | `regression`), `tabpfn_systems`, optional `tabpfn_config`, `thinking_effort` (`medium` | `high` or omit), `thinking_timeout_s`, `thinking_effort_metric`, `force_refit`.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "tabpfn",
+                "fit"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bearerToken}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"train_set_upload_id\": \"<uuid>\",\n  \"task\": \"<string>\",\n  \"tabpfn_systems\": [\n    \"preprocessing\",\n    \"text\"\n  ],\n  \"tabpfn_config\": {\n    \"key_0\": 9141.455728204926,\n    \"key_1\": 4779.720355277282\n  },\n  \"thinking_effort\": \"<string>\",\n  \"thinking_timeout_s\": \"<number>\",\n  \"thinking_effort_metric\": \"<string>\",\n  \"force_refit\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "38ad4749-056e-49fb-8d49-a01bf0f2018e",
+              "name": "Fitted train set id (JSON; may be streamed with leading whitespace on long fits).",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "tabpfn",
+                    "fit"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"train_set_upload_id\": \"123e4567-e89b-12d3-a456-426614174000\",\n  \"task\": \"classification\",\n  \"tabpfn_systems\": [\n    \"preprocessing\",\n    \"text\"\n  ],\n  \"thinking_effort\": \"medium\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"fitted_train_set_id\": \"86b348d9-8e5b-77f2-255a-a0b44a4ad33b\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "8a20d539-e7e9-40ed-9807-c76c65ef7bec",
+              "name": "Unauthorized — authentication required or credentials invalid.\n\n**Possible causes:**\n- Missing or malformed `Authorization` header\n- Invalid or expired JWT token\n- User not found (token references a deleted account)\n- JWT decode errors (JWEDecodeError, JWTDecodeError, JWTClaimsError)\n\n**Examples:**\n- Missing token: `{\"detail\": \"Not authenticated\"}`\n- Invalid credentials: `{\"detail\": \"Could not validate credentials\"}`",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "tabpfn",
+                    "fit"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"train_set_upload_id\": \"123e4567-e89b-12d3-a456-426614174000\",\n  \"task\": \"classification\",\n  \"tabpfn_systems\": [\n    \"preprocessing\",\n    \"text\"\n  ],\n  \"thinking_effort\": \"medium\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"auth.unauthorized\",\n  \"detail\": \"Not authenticated\",\n  \"retryable\": false,\n  \"support\": \"https://discord.com/invite/VJRuU3bSxt\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "9f283430-f766-4c4a-bee8-5066ed395a12",
+              "name": "Model not found — the provided model ID does not exist or has expired.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "tabpfn",
+                    "fit"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"train_set_upload_id\": \"123e4567-e89b-12d3-a456-426614174000\",\n  \"task\": \"classification\",\n  \"tabpfn_systems\": [\n    \"preprocessing\",\n    \"text\"\n  ],\n  \"thinking_effort\": \"medium\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"error.not_found\",\n  \"detail\": \"Fitted model with ID 123e4567-e89b-12d3-a456-426614174000 not found\",\n  \"retryable\": false,\n  \"support\": \"https://discord.com/invite/VJRuU3bSxt\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "b60a8777-fad9-4b80-9a81-43647fc759a5",
+              "name": "Validation error — one or more fields are incorrectly formatted.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "tabpfn",
+                    "fit"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"train_set_upload_id\": \"123e4567-e89b-12d3-a456-426614174000\",\n  \"task\": \"classification\",\n  \"tabpfn_systems\": [\n    \"preprocessing\",\n    \"text\"\n  ],\n  \"thinking_effort\": \"medium\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"validation.failed\",\n  \"detail\": \"Validation error for FitRequest\",\n  \"errors\": [\n    {\n      \"field\": \"task\",\n      \"message\": \"field required\"\n    },\n    {\n      \"field\": \"systems\",\n      \"message\": \"Invalid system: invalid_system. Must be one of: ['preprocessing', 'text']\"\n    }\n  ],\n  \"retryable\": false,\n  \"support\": \"https://discord.com/invite/VJRuU3bSxt\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "e1787982-15e4-446e-b703-b7329215e35a",
+              "name": "Quota exceeded (predict pre-check or thinking-fit monthly limit).",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "tabpfn",
+                    "fit"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"train_set_upload_id\": \"123e4567-e89b-12d3-a456-426614174000\",\n  \"task\": \"classification\",\n  \"tabpfn_systems\": [\n    \"preprocessing\",\n    \"text\"\n  ],\n  \"thinking_effort\": \"medium\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "87f0fe3a-b25e-4c60-9ab1-b5c726e4a3d9",
+          "name": "Fit a Model",
+          "request": {
+            "name": "Fit a Model",
+            "description": {
+              "content": "**Deprecated:** Prefer the TabPFN client (`tabpfn-client`) or `POST /tabpfn/fit` after preparing uploads. This multipart `/v1/fit` surface is legacy. See the [TabPFN-3 changelog](/changelog/tabpfn-3).\n\nUploads and fits a TabPFN model on your training data. The API automatically handles preprocessing and stores a reference to your trained context (not the model weights). You can use either a single dataset file (with the target column included) or separate feature and label files.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "v1",
+                "fit"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bearerToken}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": []
+            }
+          },
+          "response": [
+            {
+              "id": "f1335aed-943e-4e5b-aa83-33c859c82835",
+              "name": "Model fitted successfully — returns a model ID for later prediction calls.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "fit"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "description": {
+                        "content": "(Required) A JSON string defining the training configuration. \n\n**Supported Systems**: \n- `[\"preprocessing\"]` - Applies skrub preprocessing, \n- `[\"text\"]` - Adds text embeddings for text columns. \n\n**Default**: `[\"preprocessing\", \"text\"]`. \n\n**Supported Config Parameters**:\n- `n_estimators` (`int`, 1-10) - Number of ensemble estimators, \n- `softmax_temperature` (`float`) - Temperature for softmax scaling, \n- `average_before_softmax` (`bool`) - Average before softmax,\n- `ignore_pretraining_limits` (`bool`) - Ignore pretraining limits, \n- `random_state` (`int`) - Random seed for reproducibility.",
+                        "type": "text/plain"
+                      },
+                      "key": "data",
+                      "value": "{\"task\": \"classification\", \"schema\": {\"target\": \"churn\"}}",
+                      "type": "text"
+                    },
+                    {
+                      "description": {
+                        "content": "**Option 1:** CSV file containing both features (`X_train`) and labels (`y_train`). Use this when you have **all data in a single file**.",
+                        "type": "text/plain"
+                      },
+                      "key": "dataset_file",
+                      "type": "file"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"model_id\": \"123e4567-e89b-12d3-a456-426614174000\",\n  \"task\": \"classification\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "24b33e02-3501-4d5d-b6ad-1a505b0dd694",
+              "name": "Invalid request — missing data or malformed input.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "fit"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "description": {
+                        "content": "(Required) A JSON string defining the training configuration. \n\n**Supported Systems**: \n- `[\"preprocessing\"]` - Applies skrub preprocessing, \n- `[\"text\"]` - Adds text embeddings for text columns. \n\n**Default**: `[\"preprocessing\", \"text\"]`. \n\n**Supported Config Parameters**:\n- `n_estimators` (`int`, 1-10) - Number of ensemble estimators, \n- `softmax_temperature` (`float`) - Temperature for softmax scaling, \n- `average_before_softmax` (`bool`) - Average before softmax,\n- `ignore_pretraining_limits` (`bool`) - Ignore pretraining limits, \n- `random_state` (`int`) - Random seed for reproducibility.",
+                        "type": "text/plain"
+                      },
+                      "key": "data",
+                      "value": "{\"task\": \"classification\", \"schema\": {\"target\": \"churn\"}}",
+                      "type": "text"
+                    },
+                    {
+                      "description": {
+                        "content": "**Option 1:** CSV file containing both features (`X_train`) and labels (`y_train`). Use this when you have **all data in a single file**.",
+                        "type": "text/plain"
+                      },
+                      "key": "dataset_file",
+                      "type": "file"
+                    }
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"error.bad_request\",\n  \"detail\": \"Invalid request data\",\n  \"retryable\": false,\n  \"support\": \"https://discord.com/invite/VJRuU3bSxt\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "1acda83e-e3c5-416d-9fb2-c3b55c8c7bd3",
+              "name": "Unauthorized — authentication required or credentials invalid.\n\n**Possible causes:**\n- Missing or malformed `Authorization` header\n- Invalid or expired JWT token\n- User not found (token references a deleted account)\n- JWT decode errors (JWEDecodeError, JWTDecodeError, JWTClaimsError)\n\n**Examples:**\n- Missing token: `{\"detail\": \"Not authenticated\"}`\n- Invalid credentials: `{\"detail\": \"Could not validate credentials\"}`",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "fit"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "description": {
+                        "content": "(Required) A JSON string defining the training configuration. \n\n**Supported Systems**: \n- `[\"preprocessing\"]` - Applies skrub preprocessing, \n- `[\"text\"]` - Adds text embeddings for text columns. \n\n**Default**: `[\"preprocessing\", \"text\"]`. \n\n**Supported Config Parameters**:\n- `n_estimators` (`int`, 1-10) - Number of ensemble estimators, \n- `softmax_temperature` (`float`) - Temperature for softmax scaling, \n- `average_before_softmax` (`bool`) - Average before softmax,\n- `ignore_pretraining_limits` (`bool`) - Ignore pretraining limits, \n- `random_state` (`int`) - Random seed for reproducibility.",
+                        "type": "text/plain"
+                      },
+                      "key": "data",
+                      "value": "{\"task\": \"classification\", \"schema\": {\"target\": \"churn\"}}",
+                      "type": "text"
+                    },
+                    {
+                      "description": {
+                        "content": "**Option 1:** CSV file containing both features (`X_train`) and labels (`y_train`). Use this when you have **all data in a single file**.",
+                        "type": "text/plain"
+                      },
+                      "key": "dataset_file",
+                      "type": "file"
+                    }
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"auth.unauthorized\",\n  \"detail\": \"Not authenticated\",\n  \"retryable\": false,\n  \"support\": \"https://discord.com/invite/VJRuU3bSxt\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "12826ff8-5e9a-4fe6-956d-5cc3760756ba",
+              "name": "Forbidden — user account not verified or insufficient permissions.\n\n**Possible causes:**\n- Valid token for an unverified user\n- Account not yet verified via email\n\n**Example response:**\n`{\"code\": \"auth.forbidden\", \"detail\": \"User account not verified\", \"retryable\": false, \"support\": \"https://discord.com/invite/VJRuU3bSxt\"}`",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "fit"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "description": {
+                        "content": "(Required) A JSON string defining the training configuration. \n\n**Supported Systems**: \n- `[\"preprocessing\"]` - Applies skrub preprocessing, \n- `[\"text\"]` - Adds text embeddings for text columns. \n\n**Default**: `[\"preprocessing\", \"text\"]`. \n\n**Supported Config Parameters**:\n- `n_estimators` (`int`, 1-10) - Number of ensemble estimators, \n- `softmax_temperature` (`float`) - Temperature for softmax scaling, \n- `average_before_softmax` (`bool`) - Average before softmax,\n- `ignore_pretraining_limits` (`bool`) - Ignore pretraining limits, \n- `random_state` (`int`) - Random seed for reproducibility.",
+                        "type": "text/plain"
+                      },
+                      "key": "data",
+                      "value": "{\"task\": \"classification\", \"schema\": {\"target\": \"churn\"}}",
+                      "type": "text"
+                    },
+                    {
+                      "description": {
+                        "content": "**Option 1:** CSV file containing both features (`X_train`) and labels (`y_train`). Use this when you have **all data in a single file**.",
+                        "type": "text/plain"
+                      },
+                      "key": "dataset_file",
+                      "type": "file"
+                    }
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"auth.forbidden\",\n  \"detail\": \"User account not verified\",\n  \"retryable\": false,\n  \"support\": \"https://discord.com/invite/VJRuU3bSxt\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "3ce38812-5b64-4e79-a5ac-7b5f1906fd0e",
+              "name": "Validation error — one or more fields are incorrectly formatted.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "fit"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "description": {
+                        "content": "(Required) A JSON string defining the training configuration. \n\n**Supported Systems**: \n- `[\"preprocessing\"]` - Applies skrub preprocessing, \n- `[\"text\"]` - Adds text embeddings for text columns. \n\n**Default**: `[\"preprocessing\", \"text\"]`. \n\n**Supported Config Parameters**:\n- `n_estimators` (`int`, 1-10) - Number of ensemble estimators, \n- `softmax_temperature` (`float`) - Temperature for softmax scaling, \n- `average_before_softmax` (`bool`) - Average before softmax,\n- `ignore_pretraining_limits` (`bool`) - Ignore pretraining limits, \n- `random_state` (`int`) - Random seed for reproducibility.",
+                        "type": "text/plain"
+                      },
+                      "key": "data",
+                      "value": "{\"task\": \"classification\", \"schema\": {\"target\": \"churn\"}}",
+                      "type": "text"
+                    },
+                    {
+                      "description": {
+                        "content": "**Option 1:** CSV file containing both features (`X_train`) and labels (`y_train`). Use this when you have **all data in a single file**.",
+                        "type": "text/plain"
+                      },
+                      "key": "dataset_file",
+                      "type": "file"
+                    }
+                  ]
+                }
+              },
+              "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"validation.failed\",\n  \"detail\": \"Validation error for FitRequest\",\n  \"errors\": [\n    {\n      \"field\": \"task\",\n      \"message\": \"field required\"\n    },\n    {\n      \"field\": \"systems\",\n      \"message\": \"Invalid system: invalid_system. Must be one of: ['preprocessing', 'text']\"\n    }\n  ],\n  \"retryable\": false,\n  \"support\": \"https://discord.com/invite/VJRuU3bSxt\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "https://api.priorlabs.ai",
+      "key": "baseUrl"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bearerToken}}"
+      }
+    ]
+  },
+  "info": {
+    "_postman_id": "0721cd6d-f184-41d7-80e6-f15024c8859b",
+    "name": "TabPFN Prediction Training API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Prior Labs TabPFN API. **Prefer [tabpfn-client](https://github.com/PriorLabs/tabpfn-client)**. Current integration surface: **`/tabpfn/*` JSON routes** (prepare uploads, fit, predict, limits). **`/v1/*` multipart routes are deprecated.** See the [Changelog](/changelog).\n\nContact Support:\n Name: Prior Labs\n Email: hello@priorlabs.ai",
+      "type": "text/plain"
+    }
+  }
+}

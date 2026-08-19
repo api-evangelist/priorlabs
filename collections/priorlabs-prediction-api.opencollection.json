@@ -1,0 +1,92 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "TabPFN Prediction API",
+    "version": "2.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Prediction",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Prepare test set upload",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.priorlabs.ai/tabpfn/prepare_test_set_upload",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "**Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.\n\nAfter fit: pass `fitted_train_set_id` and `x_test_info`; receive `test_set_upload_id` and signed URLs for test features."
+        },
+        {
+          "info": {
+            "name": "Predict (TabPFN JSON API)",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.priorlabs.ai/tabpfn/predict",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "**Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.\n\nJSON body after `POST /tabpfn/prepare_test_set_upload` and file upload. Fields: `test_set_upload_id`, `fitted_train_set_id` (from `/tabpfn/fit`), `task_config` (task + tabpfn config), optional `force_refit`."
+        },
+        {
+          "info": {
+            "name": "Run Predictions",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.priorlabs.ai/v1/predict",
+            "body": {
+              "type": "multipart-form",
+              "data": [
+                {
+                  "name": "data",
+                  "type": "text",
+                  "value": ""
+                },
+                {
+                  "name": "file",
+                  "type": "text",
+                  "value": ""
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "**Deprecated:** Prefer `tabpfn-client` or `POST /tabpfn/predict`. See the [TabPFN-3 changelog](/changelog/tabpfn-3).\n\nRun inference using a previously fitted TabPFN model. Upload your test dataset and specify the model ID from your previous `/v1/fit` call. The endpoint returns predicted probabilities or values depending on the task type."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

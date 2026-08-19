@@ -1,0 +1,117 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "TabPFN Prediction Training API",
+    "version": "2.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Training",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Prepare train set upload",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.priorlabs.ai/tabpfn/prepare_train_set_upload",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "**Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.\n\nFirst step for TabPFN v2 flow: pass `x_train_info` / `y_train_info` metadata (name, size, hash); receive `train_set_upload_id` and signed upload URLs."
+        },
+        {
+          "info": {
+            "name": "Get model limits",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.priorlabs.ai/tabpfn/get_model_limits",
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "**Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.\n\nReturns `default_model_version`, per-version `model_limits` (rows, cells, classes, cols), and `dataset_max_size_bytes`. The client calls this to size-check before upload."
+        },
+        {
+          "info": {
+            "name": "Fit (TabPFN JSON API)",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.priorlabs.ai/tabpfn/fit",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "**Recommended:** Use [tabpfn-client](https://github.com/PriorLabs/tabpfn-client) (`TabPFNClassifier` / `TabPFNRegressor`). It calls these routes for you.\n\nJSON body after you upload train files via `POST /tabpfn/prepare_train_set_upload` and PUT the returned signed URLs. Returns `fitted_train_set_id`. Long fits may stream JSON with leading keepalive whitespace; see the [TabPFN-3 changelog](/changelog/tabpfn-3).\n\nKey fields: `train_set_upload_id` (UUID), `task` (`classification` | `regression`), "
+        },
+        {
+          "info": {
+            "name": "Fit a Model",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.priorlabs.ai/v1/fit",
+            "body": {
+              "type": "multipart-form",
+              "data": [
+                {
+                  "name": "data",
+                  "type": "text",
+                  "value": ""
+                },
+                {
+                  "name": "dataset_file",
+                  "type": "text",
+                  "value": ""
+                },
+                {
+                  "name": "features_file",
+                  "type": "text",
+                  "value": ""
+                },
+                {
+                  "name": "labels_file",
+                  "type": "text",
+                  "value": ""
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "**Deprecated:** Prefer the TabPFN client (`tabpfn-client`) or `POST /tabpfn/fit` after preparing uploads. This multipart `/v1/fit` surface is legacy. See the [TabPFN-3 changelog](/changelog/tabpfn-3).\n\nUploads and fits a TabPFN model on your training data. The API automatically handles preprocessing and stores a reference to your trained context (not the model weights). You can use either a single dataset file (with the target column included) or separate feature and label files."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}
