@@ -72,6 +72,8 @@ apis:
   humanURL: https://docs.priorlabs.ai/api-reference/getting-started
   baseURL: https://api.priorlabs.ai
   tags:
+  - Predictions
+  tags_raw:
   - Prediction
   properties:
   - type: OpenAPI
