@@ -1,8 +1,7 @@
 {
   "provider": "priorlabs",
   "sources": [
-    "priorlabs-prediction-api-openapi.yml",
-    "priorlabs-training-api-openapi.yml"
+    "_original/priorlabs-openapi-original.json"
   ],
   "outputs": [
     "priorlabs-prediction-api-openapi.yml",
@@ -11,6 +10,15 @@
   "archived": [],
   "errors": [],
   "warnings": [],
-  "notes": [],
-  "skipped": []
+  "notes": [
+    "sourced from openapi/_original/ (1 archived document(s)); previously refined output at the top level was skipped rather than re-split",
+    "priorlabs-openapi-original.json: upgraded openapi 3.1.0 -> OpenAPI 3.2.0",
+    "priorlabs-openapi-original.json: declared missing tag: Prediction",
+    "priorlabs-openapi-original.json: declared missing tag: Training",
+    "apis.yml register: already-registered"
+  ],
+  "skipped": [
+    "priorlabs-prediction-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "priorlabs-training-api-openapi.yml: previously refined output, superseded by openapi/_original/"
+  ]
 }
