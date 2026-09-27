@@ -352,38 +352,61 @@ paths:
       deprecated: true
 components:
   schemas:
-    PredictRequest:
-      properties:
-        test_set_upload_id:
-          type: string
-          format: uuid
-          title: Test Set Upload Id
-        fitted_train_set_id:
-          type: string
-          format: uuid
-          title: Fitted Train Set Id
-        task_config:
-          oneOf:
-          - $ref: '#/components/schemas/ClassifierConfig'
-          - $ref: '#/components/schemas/RegressorConfig'
-          title: Task Config
-          discriminator:
-            propertyName: task
-            mapping:
-              classification: '#/components/schemas/ClassifierConfig'
-              regression: '#/components/schemas/RegressorConfig'
-        force_refit:
-          type: boolean
-          title: Force Refit
-          description: Whether to force the fitting of the test set even if a fittedtest set and transform states already exist.
-          default: false
-      additionalProperties: false
+    ValidationError:
       type: object
       required:
-      - test_set_upload_id
-      - fitted_train_set_id
-      - task_config
-      title: PredictRequest
+      - code
+      - detail
+      - errors
+      - retryable
+      - support
+      properties:
+        code:
+          type: string
+          description: Error category code for validation errors
+          example: validation.failed
+        detail:
+          type: string
+          description: Human-readable validation error message
+          example: Validation error for FitRequest
+        errors:
+          type: array
+          description: Array of field-level validation errors
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Field name where the error occurred
+                example: task
+              message:
+                type: string
+                description: Error message for this field
+                example: field required
+        retryable:
+          type: boolean
+          description: Indicates whether the request can be retried
+          example: false
+        support:
+          type: string
+          description: URL to get support for this error
+          example: https://discord.com/invite/VJRuU3bSxt
+      example:
+        code: validation.failed
+        detail: Validation error for FitRequest
+        errors:
+        - field: task
+          message: field required
+        - field: systems
+          message: 'Invalid system: invalid_system. Must be one of: [''preprocessing'', ''text'']'
+        retryable: false
+        support: https://discord.com/invite/VJRuU3bSxt
+    PredictionTask:
+      type: string
+      enum:
+      - classification
+      - regression
+      description: Specifies the type of task to perform — either classification or regression.
     RegressorTabPFNConfig:
       properties:
         n_estimators:
@@ -458,6 +481,90 @@ components:
       additionalProperties: false
       type: object
       title: RegressorTabPFNConfig
+    ErrorResponse:
+      type: object
+      required:
+      - code
+      - detail
+      - retryable
+      - support
+      properties:
+        code:
+          type: string
+          description: Error category code (e.g., auth.unauthorized, rate.limit.exceeded)
+          example: auth.unauthorized
+        detail:
+          type: string
+          description: Human-readable error message describing what went wrong.
+          example: Invalid authentication credentials
+        retryable:
+          type: boolean
+          description: Indicates whether the request can be retried.
+          example: false
+        support:
+          type: string
+          description: URL to get support for this error.
+          example: https://discord.com/invite/VJRuU3bSxt
+      example:
+        code: auth.unauthorized
+        detail: Invalid authentication credentials
+        retryable: false
+        support: https://discord.com/invite/VJRuU3bSxt
+    FileUploadInfo:
+      properties:
+        signed_urls:
+          items:
+            type: string
+          type: array
+          minItems: 1
+          title: Signed Urls
+        expires_at:
+          type: number
+          title: Expires At
+        required_headers:
+          additionalProperties:
+            type: string
+          type: object
+          title: Required Headers
+      additionalProperties: false
+      type: object
+      required:
+      - signed_urls
+      - expires_at
+      - required_headers
+      title: FileUploadInfo
+    PredictRequest:
+      properties:
+        test_set_upload_id:
+          type: string
+          format: uuid
+          title: Test Set Upload Id
+        fitted_train_set_id:
+          type: string
+          format: uuid
+          title: Fitted Train Set Id
+        task_config:
+          oneOf:
+          - $ref: '#/components/schemas/ClassifierConfig'
+          - $ref: '#/components/schemas/RegressorConfig'
+          title: Task Config
+          discriminator:
+            propertyName: task
+            mapping:
+              classification: '#/components/schemas/ClassifierConfig'
+              regression: '#/components/schemas/RegressorConfig'
+        force_refit:
+          type: boolean
+          title: Force Refit
+          description: Whether to force the fitting of the test set even if a fittedtest set and transform states already exist.
+          default: false
+      additionalProperties: false
+      type: object
+      required:
+      - test_set_upload_id
+      - fitted_train_set_id
+      - task_config
+      title: PredictRequest
     PreprocessorConfig:
       properties:
         name:
@@ -547,6 +654,48 @@ components:
       - name
       title: PreprocessorConfig
       description: "Configuration for data preprocessing.\n\nAttributes:\n    name: Name of the preprocessor.\n    categorical_name:\n        Name of the categorical encoding method.\n        Options: \"none\", \"numeric\", \"onehot\", \"ordinal\", \"ordinal_shuffled\", \"none\".\n    append_to_original: If set to \"auto\", this is dynamically set to\n        True if the number of features is less than 500, and False otherwise.\n        Note that if set to \"auto\" and `max_features_per_estimator` is set as well,\n        this flag will become False if the number of features is larger than\n        `max_features_per_estimator / 2`. If True, the transformed features are\n        appended to the original features, however both are capped at the\n        max_features_per_estimator threshold, this should be used with caution as a\n        given model might not be configured for it.\n    max_features_per_estimator: Maximum number of features per estimator. In case\n        the dataset has more features than this, the features are subsampled for\n        each estimator independently. If append to original is set to True we can\n        still have more features.\n    global_transformer_name: Name of the global transformer to use.\n    max_onehot_cardinality: Maximum number of unique values a categorical feature\n        can have to be one-hot encoded. Features with higher cardinality are passed\n        through unchanged to ordinal encoding. If None, all categorical features\n        are one-hot encoded."
+    RegressorConfig:
+      properties:
+        task:
+          type: string
+          const: regression
+          title: Task
+          default: regression
+        tabpfn_config:
+          $ref: '#/components/schemas/RegressorTabPFNConfig'
+        predict_params:
+          $ref: '#/components/schemas/RegressorPredictParams'
+      additionalProperties: false
+      type: object
+      title: RegressorConfig
+    PrepareTestSetUploadResponse:
+      properties:
+        test_set_upload_id:
+          type: string
+          format: uuid
+          title: Test Set Upload Id
+        x_test_info:
+          $ref: '#/components/schemas/FileUploadInfo'
+      additionalProperties: false
+      type: object
+      required:
+      - test_set_upload_id
+      - x_test_info
+      title: PrepareTestSetUploadResponse
+    ClassifierOutputType:
+      type: string
+      enum:
+      - probas
+      - preds
+      title: ClassifierOutputType
+    FitMode:
+      type: string
+      enum:
+      - low_memory
+      - fit_preprocessors
+      - fit_with_cache
+      - batched
+      title: FitMode
     PrepareTestSetUploadRequest:
       properties:
         fitted_train_set_id:
@@ -566,52 +715,115 @@ components:
       - fitted_train_set_id
       - x_test_info
       title: PrepareTestSetUploadRequest
-    RegressorMetadata:
+    FileInfo:
       properties:
-        test_set_num_rows:
-          type: integer
-          title: Test Set Num Rows
-        test_set_num_cols:
-          type: integer
-          title: Test Set Num Cols
-        task:
+        format:
           type: string
-          const: regression
-          title: Task
-          default: regression
-        package_version:
-          type: string
-          title: Package Version
-        tabpfn_config:
-          $ref: '#/components/schemas/RegressorTabPFNConfig'
+          enum:
+          - csv
+          - parquet
+          title: Format
+        hash:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Hash
+          description: The crc32c hash of the file, used to deduplicate the file.
+        size_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Size Bytes
+          description: The size of the file in bytes, used to compute the optimal number of chunks when chunking is enabled.
+        use_chunks:
+          type: boolean
+          title: Use Chunks
+          description: Whether to split the the file into chunks and upload them in parallel.
+          default: false
       additionalProperties: false
       type: object
       required:
-      - test_set_num_rows
-      - test_set_num_cols
-      - package_version
-      - tabpfn_config
-      title: RegressorMetadata
-    RegressorConfig:
+      - format
+      title: FileInfo
+    ClassifierTabPFNConfig:
       properties:
-        task:
+        n_estimators:
+          anyOf:
+          - type: integer
+            maximum: 8
+            minimum: 1
+          - type: 'null'
+          title: N Estimators
+        categorical_features_indices:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+          - type: 'null'
+          title: Categorical Features Indices
+        softmax_temperature:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Softmax Temperature
+        average_before_softmax:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Average Before Softmax
+        random_state:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Random State
+        inference_config:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - $ref: '#/components/schemas/InferenceConfig'
+          - type: 'null'
+          title: Inference Config
+        ignore_pretraining_limits:
+          type: boolean
+          title: Ignore Pretraining Limits
+          default: true
+        n_preprocessing_jobs:
+          type: integer
+          title: N Preprocessing Jobs
+          default: 4
+        inference_precision:
           type: string
-          const: regression
-          title: Task
-          default: regression
-        tabpfn_config:
-          $ref: '#/components/schemas/RegressorTabPFNConfig'
-        predict_params:
-          $ref: '#/components/schemas/RegressorPredictParams'
+          title: Inference Precision
+          default: auto
+        fit_mode:
+          $ref: '#/components/schemas/FitMode'
+          default: fit_preprocessors
+        device:
+          anyOf:
+          - items:
+              type: string
+            type: array
+            minItems: 1
+          - type: 'null'
+          title: Device
+        memory_saving_mode:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Memory Saving Mode
+        model_path:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Model Path
+        balance_probabilities:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Balance Probabilities
       additionalProperties: false
       type: object
-      title: RegressorConfig
-    ClassifierOutputType:
-      type: string
-      enum:
-      - probas
-      - preds
-      title: ClassifierOutputType
+      title: ClassifierTabPFNConfig
     InferenceConfig:
       properties:
         PREPROCESS_TRANSFORMS:
@@ -771,138 +983,83 @@ components:
         Do not edit the default values in this class, as this can affect the backwards
 
         compatibility of the model checkpoints. Instead, edit `get_default()`.'
-    ClassifierTabPFNConfig:
+    ClassifierMetadata:
       properties:
-        n_estimators:
-          anyOf:
-          - type: integer
-            maximum: 8
-            minimum: 1
-          - type: 'null'
-          title: N Estimators
-        categorical_features_indices:
-          anyOf:
-          - items:
-              type: integer
-            type: array
-          - type: 'null'
-          title: Categorical Features Indices
-        softmax_temperature:
-          anyOf:
-          - type: number
-          - type: 'null'
-          title: Softmax Temperature
-        average_before_softmax:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          title: Average Before Softmax
-        random_state:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Random State
-        inference_config:
-          anyOf:
-          - additionalProperties: true
-            type: object
-          - $ref: '#/components/schemas/InferenceConfig'
-          - type: 'null'
-          title: Inference Config
-        ignore_pretraining_limits:
-          type: boolean
-          title: Ignore Pretraining Limits
-          default: true
-        n_preprocessing_jobs:
+        test_set_num_rows:
           type: integer
-          title: N Preprocessing Jobs
-          default: 4
-        inference_precision:
+          title: Test Set Num Rows
+        test_set_num_cols:
+          type: integer
+          title: Test Set Num Cols
+        task:
           type: string
-          title: Inference Precision
-          default: auto
-        fit_mode:
-          $ref: '#/components/schemas/FitMode'
-          default: fit_preprocessors
-        device:
+          const: classification
+          title: Task
+          default: classification
+        package_version:
+          type: string
+          title: Package Version
+        tabpfn_config:
+          $ref: '#/components/schemas/ClassifierTabPFNConfig'
+      additionalProperties: false
+      type: object
+      required:
+      - test_set_num_rows
+      - test_set_num_cols
+      - package_version
+      - tabpfn_config
+      title: ClassifierMetadata
+    RegressorMetadata:
+      properties:
+        test_set_num_rows:
+          type: integer
+          title: Test Set Num Rows
+        test_set_num_cols:
+          type: integer
+          title: Test Set Num Cols
+        task:
+          type: string
+          const: regression
+          title: Task
+          default: regression
+        package_version:
+          type: string
+          title: Package Version
+        tabpfn_config:
+          $ref: '#/components/schemas/RegressorTabPFNConfig'
+      additionalProperties: false
+      type: object
+      required:
+      - test_set_num_rows
+      - test_set_num_cols
+      - package_version
+      - tabpfn_config
+      title: RegressorMetadata
+    ClassifierPredictParams:
+      properties:
+        output_type:
+          $ref: '#/components/schemas/ClassifierOutputType'
+          default: probas
+      additionalProperties: false
+      type: object
+      title: ClassifierPredictParams
+    RegressorPredictParams:
+      properties:
+        output_type:
+          $ref: '#/components/schemas/RegressorOutputType'
+          default: mean
+        quantiles:
           anyOf:
           - items:
-              type: string
+              type: number
+              maximum: 1
+              minimum: 0
             type: array
-            minItems: 1
           - type: 'null'
-          title: Device
-        memory_saving_mode:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          title: Memory Saving Mode
-        model_path:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Model Path
-        balance_probabilities:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          title: Balance Probabilities
+          title: Quantiles
       additionalProperties: false
       type: object
-      title: ClassifierTabPFNConfig
-    FileInfo:
-      properties:
-        format:
-          type: string
-          enum:
-          - csv
-          - parquet
-          title: Format
-        hash:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Hash
-          description: The crc32c hash of the file, used to deduplicate the file.
-        size_bytes:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Size Bytes
-          description: The size of the file in bytes, used to compute the optimal number of chunks when chunking is enabled.
-        use_chunks:
-          type: boolean
-          title: Use Chunks
-          description: Whether to split the the file into chunks and upload them in parallel.
-          default: false
-      additionalProperties: false
-      type: object
-      required:
-      - format
-      title: FileInfo
-    FileUploadInfo:
-      properties:
-        signed_urls:
-          items:
-            type: string
-          type: array
-          minItems: 1
-          title: Signed Urls
-        expires_at:
-          type: number
-          title: Expires At
-        required_headers:
-          additionalProperties:
-            type: string
-          type: object
-          title: Required Headers
-      additionalProperties: false
-      type: object
-      required:
-      - signed_urls
-      - expires_at
-      - required_headers
-      title: FileUploadInfo
+      title: RegressorPredictParams
     ClassifierConfig:
       properties:
         task:
@@ -917,85 +1074,6 @@ components:
       additionalProperties: false
       type: object
       title: ClassifierConfig
-    ClassifierPredictParams:
-      properties:
-        output_type:
-          $ref: '#/components/schemas/ClassifierOutputType'
-          default: probas
-      additionalProperties: false
-      type: object
-      title: ClassifierPredictParams
-    ValidationError:
-      type: object
-      required:
-      - code
-      - detail
-      - errors
-      - retryable
-      - support
-      properties:
-        code:
-          type: string
-          description: Error category code for validation errors
-          example: validation.failed
-        detail:
-          type: string
-          description: Human-readable validation error message
-          example: Validation error for FitRequest
-        errors:
-          type: array
-          description: Array of field-level validation errors
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-                description: Field name where the error occurred
-                example: task
-              message:
-                type: string
-                description: Error message for this field
-                example: field required
-        retryable:
-          type: boolean
-          description: Indicates whether the request can be retried
-          example: false
-        support:
-          type: string
-          description: URL to get support for this error
-          example: https://discord.com/invite/VJRuU3bSxt
-      example:
-        code: validation.failed
-        detail: Validation error for FitRequest
-        errors:
-        - field: task
-          message: field required
-        - field: systems
-          message: 'Invalid system: invalid_system. Must be one of: [''preprocessing'', ''text'']'
-        retryable: false
-        support: https://discord.com/invite/VJRuU3bSxt
-    PrepareTestSetUploadResponse:
-      properties:
-        test_set_upload_id:
-          type: string
-          format: uuid
-          title: Test Set Upload Id
-        x_test_info:
-          $ref: '#/components/schemas/FileUploadInfo'
-      additionalProperties: false
-      type: object
-      required:
-      - test_set_upload_id
-      - x_test_info
-      title: PrepareTestSetUploadResponse
-    FitMode:
-      type: string
-      enum:
-      - low_memory
-      - fit_preprocessors
-      - fit_with_cache
-      - batched
-      title: FitMode
     PredictResponse:
       properties:
         prediction:
@@ -1135,12 +1213,6 @@ components:
           softmax_temperature: 0.2
         used_credits: 10
         remaining_quota: 90
-    PredictionTask:
-      type: string
-      enum:
-      - classification
-      - regression
-      description: Specifies the type of task to perform — either classification or regression.
     RegressorOutputType:
       type: string
       enum:
@@ -1151,78 +1223,6 @@ components:
       - full
       - main
       title: RegressorOutputType
-    ClassifierMetadata:
-      properties:
-        test_set_num_rows:
-          type: integer
-          title: Test Set Num Rows
-        test_set_num_cols:
-          type: integer
-          title: Test Set Num Cols
-        task:
-          type: string
-          const: classification
-          title: Task
-          default: classification
-        package_version:
-          type: string
-          title: Package Version
-        tabpfn_config:
-          $ref: '#/components/schemas/ClassifierTabPFNConfig'
-      additionalProperties: false
-      type: object
-      required:
-      - test_set_num_rows
-      - test_set_num_cols
-      - package_version
-      - tabpfn_config
-      title: ClassifierMetadata
-    ErrorResponse:
-      type: object
-      required:
-      - code
-      - detail
-      - retryable
-      - support
-      properties:
-        code:
-          type: string
-          description: Error category code (e.g., auth.unauthorized, rate.limit.exceeded)
-          example: auth.unauthorized
-        detail:
-          type: string
-          description: Human-readable error message describing what went wrong.
-          example: Invalid authentication credentials
-        retryable:
-          type: boolean
-          description: Indicates whether the request can be retried.
-          example: false
-        support:
-          type: string
-          description: URL to get support for this error.
-          example: https://discord.com/invite/VJRuU3bSxt
-      example:
-        code: auth.unauthorized
-        detail: Invalid authentication credentials
-        retryable: false
-        support: https://discord.com/invite/VJRuU3bSxt
-    RegressorPredictParams:
-      properties:
-        output_type:
-          $ref: '#/components/schemas/RegressorOutputType'
-          default: mean
-        quantiles:
-          anyOf:
-          - items:
-              type: number
-              maximum: 1
-              minimum: 0
-            type: array
-          - type: 'null'
-          title: Quantiles
-      additionalProperties: false
-      type: object
-      title: RegressorPredictParams
   securitySchemes:
     BearerAuth:
       type: http

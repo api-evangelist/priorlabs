@@ -47,7 +47,7 @@ created: '2026-07-17'
 modified: '2026-07-20'
 tags:
 - Company
-- Machine-Learning
+- Machine Learning
 - Artificial Intelligence
 - Tabular Data
 - Foundation Models
@@ -65,6 +65,7 @@ tags_raw:
 - Data Science
 - MCP
 - SDK
+- Machine-Learning
 apis:
 - aid: priorlabs:priorlabs-prediction-api
   name: Prior Labs Prediction API
