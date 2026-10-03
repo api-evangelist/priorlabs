@@ -378,30 +378,36 @@ paths:
       deprecated: true
 components:
   schemas:
-    GetModelLimitsResponse:
+    FileInfo:
       properties:
-        default_model_version:
-          $ref: '#/components/schemas/ModelVersion'
-        max_model_limit:
-          $ref: '#/components/schemas/ModelLimit'
-        model_limits:
-          additionalProperties:
-            $ref: '#/components/schemas/ModelLimit'
-          propertyNames:
-            $ref: '#/components/schemas/ModelVersion'
-          type: object
-          title: Model Limits
-        dataset_max_size_bytes:
-          type: integer
-          title: Dataset Max Size Bytes
+        format:
+          type: string
+          enum:
+          - csv
+          - parquet
+          title: Format
+        hash:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Hash
+          description: The crc32c hash of the file, used to deduplicate the file.
+        size_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Size Bytes
+          description: The size of the file in bytes, used to compute the optimal number of chunks when chunking is enabled.
+        use_chunks:
+          type: boolean
+          title: Use Chunks
+          description: Whether to split the the file into chunks and upload them in parallel.
+          default: false
       additionalProperties: false
       type: object
       required:
-      - default_model_version
-      - max_model_limit
-      - model_limits
-      - dataset_max_size_bytes
-      title: GetModelLimitsResponse
+      - format
+      title: FileInfo
     ValidationError:
       type: object
       required:
@@ -451,91 +457,12 @@ components:
           message: 'Invalid system: invalid_system. Must be one of: [''preprocessing'', ''text'']'
         retryable: false
         support: https://discord.com/invite/VJRuU3bSxt
-    ModelLimit:
-      properties:
-        train_set_max_rows:
-          type: integer
-          title: Train Set Max Rows
-        train_set_max_cells:
-          type: integer
-          title: Train Set Max Cells
-        test_set_max_rows:
-          type: integer
-          title: Test Set Max Rows
-        max_classes:
-          type: integer
-          title: Max Classes
-        max_cols:
-          type: integer
-          title: Max Cols
-          default: 2000
-        test_set_max_rows_w_full_regression_output:
-          type: integer
-          title: Test Set Max Rows W Full Regression Output
-          default: 400
-        test_set_max_cells:
-          type: integer
-          title: Test Set Max Cells
-          readOnly: true
-      type: object
-      required:
-      - train_set_max_rows
-      - train_set_max_cells
-      - test_set_max_rows
-      - max_classes
-      - test_set_max_cells
-      title: ModelLimit
     PredictionTask:
       type: string
       enum:
       - classification
       - regression
       description: Specifies the type of task to perform — either classification or regression.
-    FitResponse:
-      type: object
-      required:
-      - model_id
-      - task
-      properties:
-        model_id:
-          type: string
-          format: uuid
-          description: Unique identifier for the fitted model (used for prediction calls).
-        task:
-          $ref: '#/components/schemas/PredictionTask'
-      example:
-        model_id: 123e4567-e89b-12d3-a456-426614174000
-        task: classification
-    FileInfo:
-      properties:
-        format:
-          type: string
-          enum:
-          - csv
-          - parquet
-          title: Format
-        hash:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Hash
-          description: The crc32c hash of the file, used to deduplicate the file.
-        size_bytes:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Size Bytes
-          description: The size of the file in bytes, used to compute the optimal number of chunks when chunking is enabled.
-        use_chunks:
-          type: boolean
-          title: Use Chunks
-          description: Whether to split the the file into chunks and upload them in parallel.
-          default: false
-      additionalProperties: false
-      type: object
-      required:
-      - format
-      title: FileInfo
     TabpfnFitResponse:
       type: object
       required:
@@ -544,6 +471,30 @@ components:
         fitted_train_set_id:
           type: string
           format: uuid
+    GetModelLimitsResponse:
+      properties:
+        default_model_version:
+          $ref: '#/components/schemas/ModelVersion'
+        max_model_limit:
+          $ref: '#/components/schemas/ModelLimit'
+        model_limits:
+          additionalProperties:
+            $ref: '#/components/schemas/ModelLimit'
+          propertyNames:
+            $ref: '#/components/schemas/ModelVersion'
+          type: object
+          title: Model Limits
+        dataset_max_size_bytes:
+          type: integer
+          title: Dataset Max Size Bytes
+      additionalProperties: false
+      type: object
+      required:
+      - default_model_version
+      - max_model_limit
+      - model_limits
+      - dataset_max_size_bytes
+      title: GetModelLimitsResponse
     PrepareTrainSetUploadRequest:
       properties:
         x_train_info:
@@ -566,6 +517,14 @@ components:
       - x_train_info
       - y_train_info
       title: PrepareTrainSetUploadRequest
+    ModelVersion:
+      type: string
+      enum:
+      - v2
+      - v2.5
+      - v2.6
+      - v3
+      title: ModelVersion
     PrepareTrainSetUploadResponse:
       properties:
         train_set_upload_id:
@@ -583,43 +542,6 @@ components:
       - x_train_info
       - y_train_info
       title: PrepareTrainSetUploadResponse
-    ErrorResponse:
-      type: object
-      required:
-      - code
-      - detail
-      - retryable
-      - support
-      properties:
-        code:
-          type: string
-          description: Error category code (e.g., auth.unauthorized, rate.limit.exceeded)
-          example: auth.unauthorized
-        detail:
-          type: string
-          description: Human-readable error message describing what went wrong.
-          example: Invalid authentication credentials
-        retryable:
-          type: boolean
-          description: Indicates whether the request can be retried.
-          example: false
-        support:
-          type: string
-          description: URL to get support for this error.
-          example: https://discord.com/invite/VJRuU3bSxt
-      example:
-        code: auth.unauthorized
-        detail: Invalid authentication credentials
-        retryable: false
-        support: https://discord.com/invite/VJRuU3bSxt
-    ModelVersion:
-      type: string
-      enum:
-      - v2
-      - v2.5
-      - v2.6
-      - v3
-      title: ModelVersion
     DuplicateTrainSetErrorResponse:
       properties:
         message:
@@ -705,6 +627,35 @@ components:
       - train_set_upload_id
       - task
       title: FitRequest
+    ErrorResponse:
+      type: object
+      required:
+      - code
+      - detail
+      - retryable
+      - support
+      properties:
+        code:
+          type: string
+          description: Error category code (e.g., auth.unauthorized, rate.limit.exceeded)
+          example: auth.unauthorized
+        detail:
+          type: string
+          description: Human-readable error message describing what went wrong.
+          example: Invalid authentication credentials
+        retryable:
+          type: boolean
+          description: Indicates whether the request can be retried.
+          example: false
+        support:
+          type: string
+          description: URL to get support for this error.
+          example: https://discord.com/invite/VJRuU3bSxt
+      example:
+        code: auth.unauthorized
+        detail: Invalid authentication credentials
+        retryable: false
+        support: https://discord.com/invite/VJRuU3bSxt
     FileUploadInfo:
       properties:
         signed_urls:
@@ -728,6 +679,55 @@ components:
       - expires_at
       - required_headers
       title: FileUploadInfo
+    ModelLimit:
+      properties:
+        train_set_max_rows:
+          type: integer
+          title: Train Set Max Rows
+        train_set_max_cells:
+          type: integer
+          title: Train Set Max Cells
+        test_set_max_rows:
+          type: integer
+          title: Test Set Max Rows
+        max_classes:
+          type: integer
+          title: Max Classes
+        max_cols:
+          type: integer
+          title: Max Cols
+          default: 2000
+        test_set_max_rows_w_full_regression_output:
+          type: integer
+          title: Test Set Max Rows W Full Regression Output
+          default: 400
+        test_set_max_cells:
+          type: integer
+          title: Test Set Max Cells
+          readOnly: true
+      type: object
+      required:
+      - train_set_max_rows
+      - train_set_max_cells
+      - test_set_max_rows
+      - max_classes
+      - test_set_max_cells
+      title: ModelLimit
+    FitResponse:
+      type: object
+      required:
+      - model_id
+      - task
+      properties:
+        model_id:
+          type: string
+          format: uuid
+          description: Unique identifier for the fitted model (used for prediction calls).
+        task:
+          $ref: '#/components/schemas/PredictionTask'
+      example:
+        model_id: 123e4567-e89b-12d3-a456-426614174000
+        task: classification
   securitySchemes:
     BearerAuth:
       type: http

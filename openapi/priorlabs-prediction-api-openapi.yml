@@ -352,6 +352,105 @@ paths:
       deprecated: true
 components:
   schemas:
+    PredictRequest:
+      properties:
+        test_set_upload_id:
+          type: string
+          format: uuid
+          title: Test Set Upload Id
+        fitted_train_set_id:
+          type: string
+          format: uuid
+          title: Fitted Train Set Id
+        task_config:
+          oneOf:
+          - $ref: '#/components/schemas/ClassifierConfig'
+          - $ref: '#/components/schemas/RegressorConfig'
+          title: Task Config
+          discriminator:
+            propertyName: task
+            mapping:
+              classification: '#/components/schemas/ClassifierConfig'
+              regression: '#/components/schemas/RegressorConfig'
+        force_refit:
+          type: boolean
+          title: Force Refit
+          description: Whether to force the fitting of the test set even if a fittedtest set and transform states already exist.
+          default: false
+      additionalProperties: false
+      type: object
+      required:
+      - test_set_upload_id
+      - fitted_train_set_id
+      - task_config
+      title: PredictRequest
+    ClassifierConfig:
+      properties:
+        task:
+          type: string
+          const: classification
+          title: Task
+          default: classification
+        tabpfn_config:
+          $ref: '#/components/schemas/ClassifierTabPFNConfig'
+        predict_params:
+          $ref: '#/components/schemas/ClassifierPredictParams'
+      additionalProperties: false
+      type: object
+      title: ClassifierConfig
+    FileUploadInfo:
+      properties:
+        signed_urls:
+          items:
+            type: string
+          type: array
+          minItems: 1
+          title: Signed Urls
+        expires_at:
+          type: number
+          title: Expires At
+        required_headers:
+          additionalProperties:
+            type: string
+          type: object
+          title: Required Headers
+      additionalProperties: false
+      type: object
+      required:
+      - signed_urls
+      - expires_at
+      - required_headers
+      title: FileUploadInfo
+    FileInfo:
+      properties:
+        format:
+          type: string
+          enum:
+          - csv
+          - parquet
+          title: Format
+        hash:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Hash
+          description: The crc32c hash of the file, used to deduplicate the file.
+        size_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Size Bytes
+          description: The size of the file in bytes, used to compute the optimal number of chunks when chunking is enabled.
+        use_chunks:
+          type: boolean
+          title: Use Chunks
+          description: Whether to split the the file into chunks and upload them in parallel.
+          default: false
+      additionalProperties: false
+      type: object
+      required:
+      - format
+      title: FileInfo
     ValidationError:
       type: object
       required:
@@ -401,170 +500,6 @@ components:
           message: 'Invalid system: invalid_system. Must be one of: [''preprocessing'', ''text'']'
         retryable: false
         support: https://discord.com/invite/VJRuU3bSxt
-    PredictionTask:
-      type: string
-      enum:
-      - classification
-      - regression
-      description: Specifies the type of task to perform — either classification or regression.
-    RegressorTabPFNConfig:
-      properties:
-        n_estimators:
-          anyOf:
-          - type: integer
-            maximum: 8
-            minimum: 1
-          - type: 'null'
-          title: N Estimators
-        categorical_features_indices:
-          anyOf:
-          - items:
-              type: integer
-            type: array
-          - type: 'null'
-          title: Categorical Features Indices
-        softmax_temperature:
-          anyOf:
-          - type: number
-          - type: 'null'
-          title: Softmax Temperature
-        average_before_softmax:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          title: Average Before Softmax
-        random_state:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Random State
-        inference_config:
-          anyOf:
-          - additionalProperties: true
-            type: object
-          - $ref: '#/components/schemas/InferenceConfig'
-          - type: 'null'
-          title: Inference Config
-        ignore_pretraining_limits:
-          type: boolean
-          title: Ignore Pretraining Limits
-          default: true
-        n_preprocessing_jobs:
-          type: integer
-          title: N Preprocessing Jobs
-          default: 4
-        inference_precision:
-          type: string
-          title: Inference Precision
-          default: auto
-        fit_mode:
-          $ref: '#/components/schemas/FitMode'
-          default: fit_preprocessors
-        device:
-          anyOf:
-          - items:
-              type: string
-            type: array
-            minItems: 1
-          - type: 'null'
-          title: Device
-        memory_saving_mode:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          title: Memory Saving Mode
-        model_path:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Model Path
-      additionalProperties: false
-      type: object
-      title: RegressorTabPFNConfig
-    ErrorResponse:
-      type: object
-      required:
-      - code
-      - detail
-      - retryable
-      - support
-      properties:
-        code:
-          type: string
-          description: Error category code (e.g., auth.unauthorized, rate.limit.exceeded)
-          example: auth.unauthorized
-        detail:
-          type: string
-          description: Human-readable error message describing what went wrong.
-          example: Invalid authentication credentials
-        retryable:
-          type: boolean
-          description: Indicates whether the request can be retried.
-          example: false
-        support:
-          type: string
-          description: URL to get support for this error.
-          example: https://discord.com/invite/VJRuU3bSxt
-      example:
-        code: auth.unauthorized
-        detail: Invalid authentication credentials
-        retryable: false
-        support: https://discord.com/invite/VJRuU3bSxt
-    FileUploadInfo:
-      properties:
-        signed_urls:
-          items:
-            type: string
-          type: array
-          minItems: 1
-          title: Signed Urls
-        expires_at:
-          type: number
-          title: Expires At
-        required_headers:
-          additionalProperties:
-            type: string
-          type: object
-          title: Required Headers
-      additionalProperties: false
-      type: object
-      required:
-      - signed_urls
-      - expires_at
-      - required_headers
-      title: FileUploadInfo
-    PredictRequest:
-      properties:
-        test_set_upload_id:
-          type: string
-          format: uuid
-          title: Test Set Upload Id
-        fitted_train_set_id:
-          type: string
-          format: uuid
-          title: Fitted Train Set Id
-        task_config:
-          oneOf:
-          - $ref: '#/components/schemas/ClassifierConfig'
-          - $ref: '#/components/schemas/RegressorConfig'
-          title: Task Config
-          discriminator:
-            propertyName: task
-            mapping:
-              classification: '#/components/schemas/ClassifierConfig'
-              regression: '#/components/schemas/RegressorConfig'
-        force_refit:
-          type: boolean
-          title: Force Refit
-          description: Whether to force the fitting of the test set even if a fittedtest set and transform states already exist.
-          default: false
-      additionalProperties: false
-      type: object
-      required:
-      - test_set_upload_id
-      - fitted_train_set_id
-      - task_config
-      title: PredictRequest
     PreprocessorConfig:
       properties:
         name:
@@ -654,97 +589,66 @@ components:
       - name
       title: PreprocessorConfig
       description: "Configuration for data preprocessing.\n\nAttributes:\n    name: Name of the preprocessor.\n    categorical_name:\n        Name of the categorical encoding method.\n        Options: \"none\", \"numeric\", \"onehot\", \"ordinal\", \"ordinal_shuffled\", \"none\".\n    append_to_original: If set to \"auto\", this is dynamically set to\n        True if the number of features is less than 500, and False otherwise.\n        Note that if set to \"auto\" and `max_features_per_estimator` is set as well,\n        this flag will become False if the number of features is larger than\n        `max_features_per_estimator / 2`. If True, the transformed features are\n        appended to the original features, however both are capped at the\n        max_features_per_estimator threshold, this should be used with caution as a\n        given model might not be configured for it.\n    max_features_per_estimator: Maximum number of features per estimator. In case\n        the dataset has more features than this, the features are subsampled for\n        each estimator independently. If append to original is set to True we can\n        still have more features.\n    global_transformer_name: Name of the global transformer to use.\n    max_onehot_cardinality: Maximum number of unique values a categorical feature\n        can have to be one-hot encoded. Features with higher cardinality are passed\n        through unchanged to ordinal encoding. If None, all categorical features\n        are one-hot encoded."
-    RegressorConfig:
+    ClassifierPredictParams:
       properties:
+        output_type:
+          $ref: '#/components/schemas/ClassifierOutputType'
+          default: probas
+      additionalProperties: false
+      type: object
+      title: ClassifierPredictParams
+    RegressorMetadata:
+      properties:
+        test_set_num_rows:
+          type: integer
+          title: Test Set Num Rows
+        test_set_num_cols:
+          type: integer
+          title: Test Set Num Cols
         task:
           type: string
           const: regression
           title: Task
           default: regression
+        package_version:
+          type: string
+          title: Package Version
         tabpfn_config:
           $ref: '#/components/schemas/RegressorTabPFNConfig'
-        predict_params:
-          $ref: '#/components/schemas/RegressorPredictParams'
-      additionalProperties: false
-      type: object
-      title: RegressorConfig
-    PrepareTestSetUploadResponse:
-      properties:
-        test_set_upload_id:
-          type: string
-          format: uuid
-          title: Test Set Upload Id
-        x_test_info:
-          $ref: '#/components/schemas/FileUploadInfo'
       additionalProperties: false
       type: object
       required:
-      - test_set_upload_id
-      - x_test_info
-      title: PrepareTestSetUploadResponse
-    ClassifierOutputType:
-      type: string
-      enum:
-      - probas
-      - preds
-      title: ClassifierOutputType
-    FitMode:
-      type: string
-      enum:
-      - low_memory
-      - fit_preprocessors
-      - fit_with_cache
-      - batched
-      title: FitMode
-    PrepareTestSetUploadRequest:
+      - test_set_num_rows
+      - test_set_num_cols
+      - package_version
+      - tabpfn_config
+      title: RegressorMetadata
+    ClassifierMetadata:
       properties:
-        fitted_train_set_id:
+        test_set_num_rows:
+          type: integer
+          title: Test Set Num Rows
+        test_set_num_cols:
+          type: integer
+          title: Test Set Num Cols
+        task:
           type: string
-          format: uuid
-          title: Fitted Train Set Id
-        x_test_info:
-          $ref: '#/components/schemas/FileInfo'
-        force_reupload:
-          type: boolean
-          title: Force Reupload
-          description: Whether to force the upload of the file even if a file with the same hash already exists.
-          default: false
+          const: classification
+          title: Task
+          default: classification
+        package_version:
+          type: string
+          title: Package Version
+        tabpfn_config:
+          $ref: '#/components/schemas/ClassifierTabPFNConfig'
       additionalProperties: false
       type: object
       required:
-      - fitted_train_set_id
-      - x_test_info
-      title: PrepareTestSetUploadRequest
-    FileInfo:
-      properties:
-        format:
-          type: string
-          enum:
-          - csv
-          - parquet
-          title: Format
-        hash:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Hash
-          description: The crc32c hash of the file, used to deduplicate the file.
-        size_bytes:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Size Bytes
-          description: The size of the file in bytes, used to compute the optimal number of chunks when chunking is enabled.
-        use_chunks:
-          type: boolean
-          title: Use Chunks
-          description: Whether to split the the file into chunks and upload them in parallel.
-          default: false
-      additionalProperties: false
-      type: object
-      required:
-      - format
-      title: FileInfo
+      - test_set_num_rows
+      - test_set_num_cols
+      - package_version
+      - tabpfn_config
+      title: ClassifierMetadata
     ClassifierTabPFNConfig:
       properties:
         n_estimators:
@@ -824,6 +728,342 @@ components:
       additionalProperties: false
       type: object
       title: ClassifierTabPFNConfig
+    ClassifierOutputType:
+      type: string
+      enum:
+      - probas
+      - preds
+      title: ClassifierOutputType
+    RegressorOutputType:
+      type: string
+      enum:
+      - mean
+      - median
+      - mode
+      - quantiles
+      - full
+      - main
+      title: RegressorOutputType
+    RegressorConfig:
+      properties:
+        task:
+          type: string
+          const: regression
+          title: Task
+          default: regression
+        tabpfn_config:
+          $ref: '#/components/schemas/RegressorTabPFNConfig'
+        predict_params:
+          $ref: '#/components/schemas/RegressorPredictParams'
+      additionalProperties: false
+      type: object
+      title: RegressorConfig
+    RegressorPredictParams:
+      properties:
+        output_type:
+          $ref: '#/components/schemas/RegressorOutputType'
+          default: mean
+        quantiles:
+          anyOf:
+          - items:
+              type: number
+              maximum: 1
+              minimum: 0
+            type: array
+          - type: 'null'
+          title: Quantiles
+      additionalProperties: false
+      type: object
+      title: RegressorPredictParams
+    PredictionTask:
+      type: string
+      enum:
+      - classification
+      - regression
+      description: Specifies the type of task to perform — either classification or regression.
+    RegressorTabPFNConfig:
+      properties:
+        n_estimators:
+          anyOf:
+          - type: integer
+            maximum: 8
+            minimum: 1
+          - type: 'null'
+          title: N Estimators
+        categorical_features_indices:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+          - type: 'null'
+          title: Categorical Features Indices
+        softmax_temperature:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Softmax Temperature
+        average_before_softmax:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Average Before Softmax
+        random_state:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Random State
+        inference_config:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - $ref: '#/components/schemas/InferenceConfig'
+          - type: 'null'
+          title: Inference Config
+        ignore_pretraining_limits:
+          type: boolean
+          title: Ignore Pretraining Limits
+          default: true
+        n_preprocessing_jobs:
+          type: integer
+          title: N Preprocessing Jobs
+          default: 4
+        inference_precision:
+          type: string
+          title: Inference Precision
+          default: auto
+        fit_mode:
+          $ref: '#/components/schemas/FitMode'
+          default: fit_preprocessors
+        device:
+          anyOf:
+          - items:
+              type: string
+            type: array
+            minItems: 1
+          - type: 'null'
+          title: Device
+        memory_saving_mode:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Memory Saving Mode
+        model_path:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Model Path
+      additionalProperties: false
+      type: object
+      title: RegressorTabPFNConfig
+    PredictionResponse:
+      type: object
+      required:
+      - duration_seconds
+      - prediction
+      - task
+      - used_credits
+      - remaining_quota
+      properties:
+        duration_seconds:
+          type: integer
+          description: Time taken (in seconds) to complete the prediction.
+        prediction:
+          description: 'The prediction output. Format depends on task and output_type:
+
+            - **Regression**: List of floats (e.g., `[1250.5, 3200.8, 980.2]`)
+
+            - **Classification with `output_type: probas`**: List of lists (probabilities) (e.g., `[[0.1, 0.9], [0.8, 0.2]]`)
+
+            - **Classification with `output_type: preds`**: List of classes (e.g., `["class_0", "class_1"]`)'
+          oneOf:
+          - type: array
+            items:
+              type: number
+            description: Regression predictions or classification probabilities
+          - type: array
+            items:
+              type: array
+              items:
+                type: number
+            description: Classification probabilities (list of lists)
+          - type: array
+            items:
+              type: string
+            description: Classification predictions (list of class names)
+        task:
+          $ref: '#/components/schemas/PredictionTask'
+        params:
+          type: object
+          description: The inference parameters that were used during prediction.
+          properties:
+            average_before_softmax:
+              type: boolean
+              description: Whether to average before applying softmax.
+            categorical_features_indices:
+              type: array
+              items:
+                type: integer
+              nullable: true
+              description: Indices of categorical features.
+            ignore_pretraining_limits:
+              type: boolean
+              description: Whether to ignore pretraining limits.
+            inference_config:
+              type: object
+              nullable: true
+              description: Additional inference configuration parameters.
+            inference_precision:
+              type: string
+              description: Inference precision (e.g., "auto", "float32", "float16").
+            model_path:
+              type: string
+              description: Model checkpoint path used for inference.
+            n_estimators:
+              type: integer
+              description: Number of ensemble estimators used.
+            n_preprocessing_jobs:
+              type: integer
+              description: Number of preprocessing jobs.
+            random_state:
+              type: integer
+              nullable: true
+              description: Random seed used for reproducibility.
+            softmax_temperature:
+              type: number
+              description: Softmax temperature parameter used.
+        used_credits:
+          type: integer
+          description: The number of credits consumed by this API call.
+        remaining_quota:
+          type: integer
+          description: Your remaining credit balance after this request.
+      example:
+        duration_seconds: 15
+        prediction:
+        - 0.1
+        - 0.9
+        - 0.3
+        - 0.7
+        task: classification
+        params:
+          average_before_softmax: false
+          categorical_features_indices: null
+          ignore_pretraining_limits: true
+          inference_config: null
+          inference_precision: auto
+          model_path: auto
+          n_estimators: 8
+          n_preprocessing_jobs: 4
+          random_state: 42
+          softmax_temperature: 0.2
+        used_credits: 10
+        remaining_quota: 90
+    PredictResponse:
+      properties:
+        prediction:
+          anyOf:
+          - items: {}
+            type: array
+          - items:
+              items: {}
+              type: array
+            type: array
+          - additionalProperties:
+              anyOf:
+              - items: {}
+                type: array
+              - items:
+                  items: {}
+                  type: array
+                type: array
+            type: object
+          title: Prediction
+        metadata:
+          oneOf:
+          - $ref: '#/components/schemas/ClassifierMetadata'
+          - $ref: '#/components/schemas/RegressorMetadata'
+          title: Metadata
+          discriminator:
+            propertyName: task
+            mapping:
+              classification: '#/components/schemas/ClassifierMetadata'
+              regression: '#/components/schemas/RegressorMetadata'
+      additionalProperties: false
+      type: object
+      required:
+      - prediction
+      - metadata
+      title: PredictResponse
+    ErrorResponse:
+      type: object
+      required:
+      - code
+      - detail
+      - retryable
+      - support
+      properties:
+        code:
+          type: string
+          description: Error category code (e.g., auth.unauthorized, rate.limit.exceeded)
+          example: auth.unauthorized
+        detail:
+          type: string
+          description: Human-readable error message describing what went wrong.
+          example: Invalid authentication credentials
+        retryable:
+          type: boolean
+          description: Indicates whether the request can be retried.
+          example: false
+        support:
+          type: string
+          description: URL to get support for this error.
+          example: https://discord.com/invite/VJRuU3bSxt
+      example:
+        code: auth.unauthorized
+        detail: Invalid authentication credentials
+        retryable: false
+        support: https://discord.com/invite/VJRuU3bSxt
+    FitMode:
+      type: string
+      enum:
+      - low_memory
+      - fit_preprocessors
+      - fit_with_cache
+      - batched
+      title: FitMode
+    PrepareTestSetUploadRequest:
+      properties:
+        fitted_train_set_id:
+          type: string
+          format: uuid
+          title: Fitted Train Set Id
+        x_test_info:
+          $ref: '#/components/schemas/FileInfo'
+        force_reupload:
+          type: boolean
+          title: Force Reupload
+          description: Whether to force the upload of the file even if a file with the same hash already exists.
+          default: false
+      additionalProperties: false
+      type: object
+      required:
+      - fitted_train_set_id
+      - x_test_info
+      title: PrepareTestSetUploadRequest
+    PrepareTestSetUploadResponse:
+      properties:
+        test_set_upload_id:
+          type: string
+          format: uuid
+          title: Test Set Upload Id
+        x_test_info:
+          $ref: '#/components/schemas/FileUploadInfo'
+      additionalProperties: false
+      type: object
+      required:
+      - test_set_upload_id
+      - x_test_info
+      title: PrepareTestSetUploadResponse
     InferenceConfig:
       properties:
         PREPROCESS_TRANSFORMS:
@@ -983,246 +1223,6 @@ components:
         Do not edit the default values in this class, as this can affect the backwards
 
         compatibility of the model checkpoints. Instead, edit `get_default()`.'
-    ClassifierMetadata:
-      properties:
-        test_set_num_rows:
-          type: integer
-          title: Test Set Num Rows
-        test_set_num_cols:
-          type: integer
-          title: Test Set Num Cols
-        task:
-          type: string
-          const: classification
-          title: Task
-          default: classification
-        package_version:
-          type: string
-          title: Package Version
-        tabpfn_config:
-          $ref: '#/components/schemas/ClassifierTabPFNConfig'
-      additionalProperties: false
-      type: object
-      required:
-      - test_set_num_rows
-      - test_set_num_cols
-      - package_version
-      - tabpfn_config
-      title: ClassifierMetadata
-    RegressorMetadata:
-      properties:
-        test_set_num_rows:
-          type: integer
-          title: Test Set Num Rows
-        test_set_num_cols:
-          type: integer
-          title: Test Set Num Cols
-        task:
-          type: string
-          const: regression
-          title: Task
-          default: regression
-        package_version:
-          type: string
-          title: Package Version
-        tabpfn_config:
-          $ref: '#/components/schemas/RegressorTabPFNConfig'
-      additionalProperties: false
-      type: object
-      required:
-      - test_set_num_rows
-      - test_set_num_cols
-      - package_version
-      - tabpfn_config
-      title: RegressorMetadata
-    ClassifierPredictParams:
-      properties:
-        output_type:
-          $ref: '#/components/schemas/ClassifierOutputType'
-          default: probas
-      additionalProperties: false
-      type: object
-      title: ClassifierPredictParams
-    RegressorPredictParams:
-      properties:
-        output_type:
-          $ref: '#/components/schemas/RegressorOutputType'
-          default: mean
-        quantiles:
-          anyOf:
-          - items:
-              type: number
-              maximum: 1
-              minimum: 0
-            type: array
-          - type: 'null'
-          title: Quantiles
-      additionalProperties: false
-      type: object
-      title: RegressorPredictParams
-    ClassifierConfig:
-      properties:
-        task:
-          type: string
-          const: classification
-          title: Task
-          default: classification
-        tabpfn_config:
-          $ref: '#/components/schemas/ClassifierTabPFNConfig'
-        predict_params:
-          $ref: '#/components/schemas/ClassifierPredictParams'
-      additionalProperties: false
-      type: object
-      title: ClassifierConfig
-    PredictResponse:
-      properties:
-        prediction:
-          anyOf:
-          - items: {}
-            type: array
-          - items:
-              items: {}
-              type: array
-            type: array
-          - additionalProperties:
-              anyOf:
-              - items: {}
-                type: array
-              - items:
-                  items: {}
-                  type: array
-                type: array
-            type: object
-          title: Prediction
-        metadata:
-          oneOf:
-          - $ref: '#/components/schemas/ClassifierMetadata'
-          - $ref: '#/components/schemas/RegressorMetadata'
-          title: Metadata
-          discriminator:
-            propertyName: task
-            mapping:
-              classification: '#/components/schemas/ClassifierMetadata'
-              regression: '#/components/schemas/RegressorMetadata'
-      additionalProperties: false
-      type: object
-      required:
-      - prediction
-      - metadata
-      title: PredictResponse
-    PredictionResponse:
-      type: object
-      required:
-      - duration_seconds
-      - prediction
-      - task
-      - used_credits
-      - remaining_quota
-      properties:
-        duration_seconds:
-          type: integer
-          description: Time taken (in seconds) to complete the prediction.
-        prediction:
-          description: 'The prediction output. Format depends on task and output_type:
-
-            - **Regression**: List of floats (e.g., `[1250.5, 3200.8, 980.2]`)
-
-            - **Classification with `output_type: probas`**: List of lists (probabilities) (e.g., `[[0.1, 0.9], [0.8, 0.2]]`)
-
-            - **Classification with `output_type: preds`**: List of classes (e.g., `["class_0", "class_1"]`)'
-          oneOf:
-          - type: array
-            items:
-              type: number
-            description: Regression predictions or classification probabilities
-          - type: array
-            items:
-              type: array
-              items:
-                type: number
-            description: Classification probabilities (list of lists)
-          - type: array
-            items:
-              type: string
-            description: Classification predictions (list of class names)
-        task:
-          $ref: '#/components/schemas/PredictionTask'
-        params:
-          type: object
-          description: The inference parameters that were used during prediction.
-          properties:
-            average_before_softmax:
-              type: boolean
-              description: Whether to average before applying softmax.
-            categorical_features_indices:
-              type: array
-              items:
-                type: integer
-              nullable: true
-              description: Indices of categorical features.
-            ignore_pretraining_limits:
-              type: boolean
-              description: Whether to ignore pretraining limits.
-            inference_config:
-              type: object
-              nullable: true
-              description: Additional inference configuration parameters.
-            inference_precision:
-              type: string
-              description: Inference precision (e.g., "auto", "float32", "float16").
-            model_path:
-              type: string
-              description: Model checkpoint path used for inference.
-            n_estimators:
-              type: integer
-              description: Number of ensemble estimators used.
-            n_preprocessing_jobs:
-              type: integer
-              description: Number of preprocessing jobs.
-            random_state:
-              type: integer
-              nullable: true
-              description: Random seed used for reproducibility.
-            softmax_temperature:
-              type: number
-              description: Softmax temperature parameter used.
-        used_credits:
-          type: integer
-          description: The number of credits consumed by this API call.
-        remaining_quota:
-          type: integer
-          description: Your remaining credit balance after this request.
-      example:
-        duration_seconds: 15
-        prediction:
-        - 0.1
-        - 0.9
-        - 0.3
-        - 0.7
-        task: classification
-        params:
-          average_before_softmax: false
-          categorical_features_indices: null
-          ignore_pretraining_limits: true
-          inference_config: null
-          inference_precision: auto
-          model_path: auto
-          n_estimators: 8
-          n_preprocessing_jobs: 4
-          random_state: 42
-          softmax_temperature: 0.2
-        used_credits: 10
-        remaining_quota: 90
-    RegressorOutputType:
-      type: string
-      enum:
-      - mean
-      - median
-      - mode
-      - quantiles
-      - full
-      - main
-      title: RegressorOutputType
   securitySchemes:
     BearerAuth:
       type: http
