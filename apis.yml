@@ -99,6 +99,9 @@ maintainers:
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: CapabilityMap
+  url: capabilities/priorlabs-capability-edges.yml
+  name: Prior Labs Business Capability Map
 - type: Documentation
   url: https://docs.priorlabs.ai/overview
 - type: DeveloperPortal
