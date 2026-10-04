@@ -378,123 +378,14 @@ paths:
       deprecated: true
 components:
   schemas:
-    FileInfo:
-      properties:
-        format:
-          type: string
-          enum:
-          - csv
-          - parquet
-          title: Format
-        hash:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Hash
-          description: The crc32c hash of the file, used to deduplicate the file.
-        size_bytes:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Size Bytes
-          description: The size of the file in bytes, used to compute the optimal number of chunks when chunking is enabled.
-        use_chunks:
-          type: boolean
-          title: Use Chunks
-          description: Whether to split the the file into chunks and upload them in parallel.
-          default: false
-      additionalProperties: false
-      type: object
-      required:
-      - format
-      title: FileInfo
-    ValidationError:
-      type: object
-      required:
-      - code
-      - detail
-      - errors
-      - retryable
-      - support
-      properties:
-        code:
-          type: string
-          description: Error category code for validation errors
-          example: validation.failed
-        detail:
-          type: string
-          description: Human-readable validation error message
-          example: Validation error for FitRequest
-        errors:
-          type: array
-          description: Array of field-level validation errors
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-                description: Field name where the error occurred
-                example: task
-              message:
-                type: string
-                description: Error message for this field
-                example: field required
-        retryable:
-          type: boolean
-          description: Indicates whether the request can be retried
-          example: false
-        support:
-          type: string
-          description: URL to get support for this error
-          example: https://discord.com/invite/VJRuU3bSxt
-      example:
-        code: validation.failed
-        detail: Validation error for FitRequest
-        errors:
-        - field: task
-          message: field required
-        - field: systems
-          message: 'Invalid system: invalid_system. Must be one of: [''preprocessing'', ''text'']'
-        retryable: false
-        support: https://discord.com/invite/VJRuU3bSxt
-    PredictionTask:
+    ModelVersion:
       type: string
       enum:
-      - classification
-      - regression
-      description: Specifies the type of task to perform — either classification or regression.
-    TabpfnFitResponse:
-      type: object
-      required:
-      - fitted_train_set_id
-      properties:
-        fitted_train_set_id:
-          type: string
-          format: uuid
-    GetModelLimitsResponse:
-      properties:
-        default_model_version:
-          $ref: '#/components/schemas/ModelVersion'
-        max_model_limit:
-          $ref: '#/components/schemas/ModelLimit'
-        model_limits:
-          additionalProperties:
-            $ref: '#/components/schemas/ModelLimit'
-          propertyNames:
-            $ref: '#/components/schemas/ModelVersion'
-          type: object
-          title: Model Limits
-        dataset_max_size_bytes:
-          type: integer
-          title: Dataset Max Size Bytes
-      additionalProperties: false
-      type: object
-      required:
-      - default_model_version
-      - max_model_limit
-      - model_limits
-      - dataset_max_size_bytes
-      title: GetModelLimitsResponse
+      - v2
+      - v2.5
+      - v2.6
+      - v3
+      title: ModelVersion
     PrepareTrainSetUploadRequest:
       properties:
         x_train_info:
@@ -517,61 +408,21 @@ components:
       - x_train_info
       - y_train_info
       title: PrepareTrainSetUploadRequest
-    ModelVersion:
-      type: string
-      enum:
-      - v2
-      - v2.5
-      - v2.6
-      - v3
-      title: ModelVersion
-    PrepareTrainSetUploadResponse:
-      properties:
-        train_set_upload_id:
-          type: string
-          format: uuid
-          title: Train Set Upload Id
-        x_train_info:
-          $ref: '#/components/schemas/FileUploadInfo'
-        y_train_info:
-          $ref: '#/components/schemas/FileUploadInfo'
-      additionalProperties: false
+    FitResponse:
       type: object
       required:
-      - train_set_upload_id
-      - x_train_info
-      - y_train_info
-      title: PrepareTrainSetUploadResponse
-    DuplicateTrainSetErrorResponse:
+      - model_id
+      - task
       properties:
-        message:
-          type: string
-          title: Message
-        error_code:
-          type: string
-          title: Error Code
-          default: DUPLICATE_TRAIN_SET_UPLOAD
-        trace_id:
-          anyOf:
-          - type: string
-            format: uuid
-          - type: 'null'
-          title: Trace Id
-        detail:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Detail
-        train_set_upload_id:
+        model_id:
           type: string
           format: uuid
-          title: Train Set Upload Id
-      additionalProperties: false
-      type: object
-      required:
-      - message
-      - train_set_upload_id
-      title: DuplicateTrainSetErrorResponse
+          description: Unique identifier for the fitted model (used for prediction calls).
+        task:
+          $ref: '#/components/schemas/PredictionTask'
+      example:
+        model_id: 123e4567-e89b-12d3-a456-426614174000
+        task: classification
     FitRequest:
       properties:
         train_set_upload_id:
@@ -627,35 +478,61 @@ components:
       - train_set_upload_id
       - task
       title: FitRequest
-    ErrorResponse:
+    PrepareTrainSetUploadResponse:
+      properties:
+        train_set_upload_id:
+          type: string
+          format: uuid
+          title: Train Set Upload Id
+        x_train_info:
+          $ref: '#/components/schemas/FileUploadInfo'
+        y_train_info:
+          $ref: '#/components/schemas/FileUploadInfo'
+      additionalProperties: false
       type: object
       required:
-      - code
-      - detail
-      - retryable
-      - support
+      - train_set_upload_id
+      - x_train_info
+      - y_train_info
+      title: PrepareTrainSetUploadResponse
+    DuplicateTrainSetErrorResponse:
       properties:
-        code:
+        message:
           type: string
-          description: Error category code (e.g., auth.unauthorized, rate.limit.exceeded)
-          example: auth.unauthorized
+          title: Message
+        error_code:
+          type: string
+          title: Error Code
+          default: DUPLICATE_TRAIN_SET_UPLOAD
+        trace_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Trace Id
         detail:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Detail
+        train_set_upload_id:
           type: string
-          description: Human-readable error message describing what went wrong.
-          example: Invalid authentication credentials
-        retryable:
-          type: boolean
-          description: Indicates whether the request can be retried.
-          example: false
-        support:
+          format: uuid
+          title: Train Set Upload Id
+      additionalProperties: false
+      type: object
+      required:
+      - message
+      - train_set_upload_id
+      title: DuplicateTrainSetErrorResponse
+    TabpfnFitResponse:
+      type: object
+      required:
+      - fitted_train_set_id
+      properties:
+        fitted_train_set_id:
           type: string
-          description: URL to get support for this error.
-          example: https://discord.com/invite/VJRuU3bSxt
-      example:
-        code: auth.unauthorized
-        detail: Invalid authentication credentials
-        retryable: false
-        support: https://discord.com/invite/VJRuU3bSxt
+          format: uuid
     FileUploadInfo:
       properties:
         signed_urls:
@@ -679,6 +556,79 @@ components:
       - expires_at
       - required_headers
       title: FileUploadInfo
+    GetModelLimitsResponse:
+      properties:
+        default_model_version:
+          $ref: '#/components/schemas/ModelVersion'
+        max_model_limit:
+          $ref: '#/components/schemas/ModelLimit'
+        model_limits:
+          additionalProperties:
+            $ref: '#/components/schemas/ModelLimit'
+          propertyNames:
+            $ref: '#/components/schemas/ModelVersion'
+          type: object
+          title: Model Limits
+        dataset_max_size_bytes:
+          type: integer
+          title: Dataset Max Size Bytes
+      additionalProperties: false
+      type: object
+      required:
+      - default_model_version
+      - max_model_limit
+      - model_limits
+      - dataset_max_size_bytes
+      title: GetModelLimitsResponse
+    ValidationError:
+      type: object
+      required:
+      - code
+      - detail
+      - errors
+      - retryable
+      - support
+      properties:
+        code:
+          type: string
+          description: Error category code for validation errors
+          example: validation.failed
+        detail:
+          type: string
+          description: Human-readable validation error message
+          example: Validation error for FitRequest
+        errors:
+          type: array
+          description: Array of field-level validation errors
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Field name where the error occurred
+                example: task
+              message:
+                type: string
+                description: Error message for this field
+                example: field required
+        retryable:
+          type: boolean
+          description: Indicates whether the request can be retried
+          example: false
+        support:
+          type: string
+          description: URL to get support for this error
+          example: https://discord.com/invite/VJRuU3bSxt
+      example:
+        code: validation.failed
+        detail: Validation error for FitRequest
+        errors:
+        - field: task
+          message: field required
+        - field: systems
+          message: 'Invalid system: invalid_system. Must be one of: [''preprocessing'', ''text'']'
+        retryable: false
+        support: https://discord.com/invite/VJRuU3bSxt
     ModelLimit:
       properties:
         train_set_max_rows:
@@ -713,21 +663,71 @@ components:
       - max_classes
       - test_set_max_cells
       title: ModelLimit
-    FitResponse:
+    FileInfo:
+      properties:
+        format:
+          type: string
+          enum:
+          - csv
+          - parquet
+          title: Format
+        hash:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Hash
+          description: The crc32c hash of the file, used to deduplicate the file.
+        size_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Size Bytes
+          description: The size of the file in bytes, used to compute the optimal number of chunks when chunking is enabled.
+        use_chunks:
+          type: boolean
+          title: Use Chunks
+          description: Whether to split the the file into chunks and upload them in parallel.
+          default: false
+      additionalProperties: false
       type: object
       required:
-      - model_id
-      - task
+      - format
+      title: FileInfo
+    PredictionTask:
+      type: string
+      enum:
+      - classification
+      - regression
+      description: Specifies the type of task to perform — either classification or regression.
+    ErrorResponse:
+      type: object
+      required:
+      - code
+      - detail
+      - retryable
+      - support
       properties:
-        model_id:
+        code:
           type: string
-          format: uuid
-          description: Unique identifier for the fitted model (used for prediction calls).
-        task:
-          $ref: '#/components/schemas/PredictionTask'
+          description: Error category code (e.g., auth.unauthorized, rate.limit.exceeded)
+          example: auth.unauthorized
+        detail:
+          type: string
+          description: Human-readable error message describing what went wrong.
+          example: Invalid authentication credentials
+        retryable:
+          type: boolean
+          description: Indicates whether the request can be retried.
+          example: false
+        support:
+          type: string
+          description: URL to get support for this error.
+          example: https://discord.com/invite/VJRuU3bSxt
       example:
-        model_id: 123e4567-e89b-12d3-a456-426614174000
-        task: classification
+        code: auth.unauthorized
+        detail: Invalid authentication credentials
+        retryable: false
+        support: https://discord.com/invite/VJRuU3bSxt
   securitySchemes:
     BearerAuth:
       type: http
