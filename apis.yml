@@ -99,6 +99,10 @@ maintainers:
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: Pricing
+  url: https://priorlabs.ai/pricing
+- type: Plans
+  url: plans/priorlabs-plans-pricing.yml
 - type: CapabilityMap
   url: capabilities/priorlabs-capability-edges.yml
   name: Prior Labs Business Capability Map
