@@ -38,3 +38,18 @@ deployment:
   probe: gated
   checked: '2026-08-12'
   source: catalog MCP census
+rfc9728:
+  endpoint: https://api.priorlabs.ai/mcp/server
+  metadata_url: https://api.priorlabs.ai/.well-known/oauth-protected-resource/mcp/server
+  discovered_via: WWW-Authenticate resource_metadata on an anonymous POST initialize
+  fetched: '2026-09-25'
+  http_status: 200
+  content_type: application/json
+  document:
+    resource: https://api.priorlabs.ai/mcp/server
+    authorization_servers:
+    - https://api.priorlabs.ai
+    scopes_supported:
+    - mcp:access
+    bearer_methods_supported:
+    - header

@@ -1,0 +1,114 @@
+# Pricing transcribed from the provider's own page — see provenance. Numbers are quoted, not derived.
+generated: '2026-10-07'
+method: searched
+source: https://priorlabs.ai/pricing
+sources:
+- https://priorlabs.ai/pricing
+provenance:
+  tool: all/0-working/economics/harvest_pricing.py
+  run: 20261007T112025
+  grounding: every price_text was found verbatim in the fetched page text
+audience: developer-api
+pricing_basis: negotiated
+delivery:
+  delivery: open-core
+  method: page
+  read: '2026-10-07'
+  evidence: Non-commercial, open-source license
+  free_edition: Free
+published: false
+note: No numeric prices; free tiers plus Contact Sales for paid plans. Free non-commercial self-hosted/open-source
+  edition offered alongside licensed commercial deployments.
+plan_count: 7
+plans:
+- name: API Free
+  price_text: Free
+  period: none
+  included_quota: Latest model, TabPFN-3.5-Plus, including Thinking mode; Free daily & monthly limits;
+    Python SDK, REST API and MCP; Support from our team and community on Discord
+- name: API Pro
+  price_text: Contact Sales
+  period: none
+  included_quota: Everything in free, plus usage limits sized to your workload, technical support, faster
+    inference with extended kv-cache
+- name: API Max
+  price_text: Contact Sales
+  period: none
+  included_quota: Advanced security and procurement compliance, dedicated support channel, early access
+    to new model versions
+- name: Private Cloud Free
+  price_text: Free
+  period: none
+  included_quota: Non-commercial license, TabPFN-3.5-Plus with Thinking mode, one-click deployment to
+    AWS Sagemaker, Azure ML
+- name: Private Cloud Commercial
+  price_text: Contact Sales
+  period: none
+  included_quota: Licence covering production workflows at scale including Thinking mode
+- name: On-prem Free
+  price_text: Free
+  period: none
+  included_quota: Non-commercial, open-source license; TabPFN-3.5; open-source tabpfn package
+- name: On-prem Commercial
+  price_text: Contact Sales
+  period: none
+  included_quota: Commercial licence to model weights or a container image
+rate_limit_statements:
+- Free daily & monthly limits
+- Requests get rejected until the limit resets, so you'll see an error straight away. Limit reset happens
+  daily & monthly.
+x-canonical:
+  generated: '2026-10-08'
+  vocabulary: all/0-working/economics/plans-canonical.yml
+  models: []
+  units: []
+  plans:
+  - name: API Free
+    access: other
+    model: unstated
+    model_how: derived
+    units: []
+    periods:
+    - none
+  - name: API Pro
+    access: other
+    model: unstated
+    model_how: derived
+    units: []
+    periods:
+    - none
+  - name: API Max
+    access: other
+    model: unstated
+    model_how: derived
+    units: []
+    periods:
+    - none
+  - name: Private Cloud Free
+    access: other
+    model: unstated
+    model_how: derived
+    units: []
+    periods:
+    - none
+  - name: Private Cloud Commercial
+    access: other
+    model: unstated
+    model_how: derived
+    units: []
+    periods:
+    - none
+  - name: On-prem Free
+    access: other
+    model: unstated
+    model_how: derived
+    units: []
+    periods:
+    - none
+  - name: On-prem Commercial
+    access: other
+    model: unstated
+    model_how: derived
+    units: []
+    periods:
+    - none
