@@ -378,51 +378,6 @@ paths:
       deprecated: true
 components:
   schemas:
-    ModelVersion:
-      type: string
-      enum:
-      - v2
-      - v2.5
-      - v2.6
-      - v3
-      title: ModelVersion
-    PrepareTrainSetUploadRequest:
-      properties:
-        x_train_info:
-          $ref: '#/components/schemas/FileInfo'
-        y_train_info:
-          $ref: '#/components/schemas/FileInfo'
-        description:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Description
-        force_reupload:
-          type: boolean
-          title: Force Reupload
-          description: Whether to force the upload of the file even if a file with the same hash already exists.
-          default: false
-      additionalProperties: false
-      type: object
-      required:
-      - x_train_info
-      - y_train_info
-      title: PrepareTrainSetUploadRequest
-    FitResponse:
-      type: object
-      required:
-      - model_id
-      - task
-      properties:
-        model_id:
-          type: string
-          format: uuid
-          description: Unique identifier for the fitted model (used for prediction calls).
-        task:
-          $ref: '#/components/schemas/PredictionTask'
-      example:
-        model_id: 123e4567-e89b-12d3-a456-426614174000
-        task: classification
     FitRequest:
       properties:
         train_set_upload_id:
@@ -478,6 +433,96 @@ components:
       - train_set_upload_id
       - task
       title: FitRequest
+    ErrorResponse:
+      type: object
+      required:
+      - code
+      - detail
+      - retryable
+      - support
+      properties:
+        code:
+          type: string
+          description: Error category code (e.g., auth.unauthorized, rate.limit.exceeded)
+          example: auth.unauthorized
+        detail:
+          type: string
+          description: Human-readable error message describing what went wrong.
+          example: Invalid authentication credentials
+        retryable:
+          type: boolean
+          description: Indicates whether the request can be retried.
+          example: false
+        support:
+          type: string
+          description: URL to get support for this error.
+          example: https://discord.com/invite/VJRuU3bSxt
+      example:
+        code: auth.unauthorized
+        detail: Invalid authentication credentials
+        retryable: false
+        support: https://discord.com/invite/VJRuU3bSxt
+    TabpfnFitResponse:
+      type: object
+      required:
+      - fitted_train_set_id
+      properties:
+        fitted_train_set_id:
+          type: string
+          format: uuid
+    ModelVersion:
+      type: string
+      enum:
+      - v2
+      - v2.5
+      - v2.6
+      - v3
+      title: ModelVersion
+    FitResponse:
+      type: object
+      required:
+      - model_id
+      - task
+      properties:
+        model_id:
+          type: string
+          format: uuid
+          description: Unique identifier for the fitted model (used for prediction calls).
+        task:
+          $ref: '#/components/schemas/PredictionTask'
+      example:
+        model_id: 123e4567-e89b-12d3-a456-426614174000
+        task: classification
+    FileInfo:
+      properties:
+        format:
+          type: string
+          enum:
+          - csv
+          - parquet
+          title: Format
+        hash:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Hash
+          description: The crc32c hash of the file, used to deduplicate the file.
+        size_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Size Bytes
+          description: The size of the file in bytes, used to compute the optimal number of chunks when chunking is enabled.
+        use_chunks:
+          type: boolean
+          title: Use Chunks
+          description: Whether to split the the file into chunks and upload them in parallel.
+          default: false
+      additionalProperties: false
+      type: object
+      required:
+      - format
+      title: FileInfo
     PrepareTrainSetUploadResponse:
       properties:
         train_set_upload_id:
@@ -495,6 +540,81 @@ components:
       - x_train_info
       - y_train_info
       title: PrepareTrainSetUploadResponse
+    GetModelLimitsResponse:
+      properties:
+        default_model_version:
+          $ref: '#/components/schemas/ModelVersion'
+        max_model_limit:
+          $ref: '#/components/schemas/ModelLimit'
+        model_limits:
+          additionalProperties:
+            $ref: '#/components/schemas/ModelLimit'
+          propertyNames:
+            $ref: '#/components/schemas/ModelVersion'
+          type: object
+          title: Model Limits
+        dataset_max_size_bytes:
+          type: integer
+          title: Dataset Max Size Bytes
+      additionalProperties: false
+      type: object
+      required:
+      - default_model_version
+      - max_model_limit
+      - model_limits
+      - dataset_max_size_bytes
+      title: GetModelLimitsResponse
+    FileUploadInfo:
+      properties:
+        signed_urls:
+          items:
+            type: string
+          type: array
+          minItems: 1
+          title: Signed Urls
+        expires_at:
+          type: number
+          title: Expires At
+        required_headers:
+          additionalProperties:
+            type: string
+          type: object
+          title: Required Headers
+      additionalProperties: false
+      type: object
+      required:
+      - signed_urls
+      - expires_at
+      - required_headers
+      title: FileUploadInfo
+    PredictionTask:
+      type: string
+      enum:
+      - classification
+      - regression
+      description: Specifies the type of task to perform — either classification or regression.
+    PrepareTrainSetUploadRequest:
+      properties:
+        x_train_info:
+          $ref: '#/components/schemas/FileInfo'
+        y_train_info:
+          $ref: '#/components/schemas/FileInfo'
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        force_reupload:
+          type: boolean
+          title: Force Reupload
+          description: Whether to force the upload of the file even if a file with the same hash already exists.
+          default: false
+      additionalProperties: false
+      type: object
+      required:
+      - x_train_info
+      - y_train_info
+      title: PrepareTrainSetUploadRequest
     DuplicateTrainSetErrorResponse:
       properties:
         message:
@@ -525,61 +645,6 @@ components:
       - message
       - train_set_upload_id
       title: DuplicateTrainSetErrorResponse
-    TabpfnFitResponse:
-      type: object
-      required:
-      - fitted_train_set_id
-      properties:
-        fitted_train_set_id:
-          type: string
-          format: uuid
-    FileUploadInfo:
-      properties:
-        signed_urls:
-          items:
-            type: string
-          type: array
-          minItems: 1
-          title: Signed Urls
-        expires_at:
-          type: number
-          title: Expires At
-        required_headers:
-          additionalProperties:
-            type: string
-          type: object
-          title: Required Headers
-      additionalProperties: false
-      type: object
-      required:
-      - signed_urls
-      - expires_at
-      - required_headers
-      title: FileUploadInfo
-    GetModelLimitsResponse:
-      properties:
-        default_model_version:
-          $ref: '#/components/schemas/ModelVersion'
-        max_model_limit:
-          $ref: '#/components/schemas/ModelLimit'
-        model_limits:
-          additionalProperties:
-            $ref: '#/components/schemas/ModelLimit'
-          propertyNames:
-            $ref: '#/components/schemas/ModelVersion'
-          type: object
-          title: Model Limits
-        dataset_max_size_bytes:
-          type: integer
-          title: Dataset Max Size Bytes
-      additionalProperties: false
-      type: object
-      required:
-      - default_model_version
-      - max_model_limit
-      - model_limits
-      - dataset_max_size_bytes
-      title: GetModelLimitsResponse
     ValidationError:
       type: object
       required:
@@ -663,71 +728,6 @@ components:
       - max_classes
       - test_set_max_cells
       title: ModelLimit
-    FileInfo:
-      properties:
-        format:
-          type: string
-          enum:
-          - csv
-          - parquet
-          title: Format
-        hash:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Hash
-          description: The crc32c hash of the file, used to deduplicate the file.
-        size_bytes:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Size Bytes
-          description: The size of the file in bytes, used to compute the optimal number of chunks when chunking is enabled.
-        use_chunks:
-          type: boolean
-          title: Use Chunks
-          description: Whether to split the the file into chunks and upload them in parallel.
-          default: false
-      additionalProperties: false
-      type: object
-      required:
-      - format
-      title: FileInfo
-    PredictionTask:
-      type: string
-      enum:
-      - classification
-      - regression
-      description: Specifies the type of task to perform — either classification or regression.
-    ErrorResponse:
-      type: object
-      required:
-      - code
-      - detail
-      - retryable
-      - support
-      properties:
-        code:
-          type: string
-          description: Error category code (e.g., auth.unauthorized, rate.limit.exceeded)
-          example: auth.unauthorized
-        detail:
-          type: string
-          description: Human-readable error message describing what went wrong.
-          example: Invalid authentication credentials
-        retryable:
-          type: boolean
-          description: Indicates whether the request can be retried.
-          example: false
-        support:
-          type: string
-          description: URL to get support for this error.
-          example: https://discord.com/invite/VJRuU3bSxt
-      example:
-        code: auth.unauthorized
-        detail: Invalid authentication credentials
-        retryable: false
-        support: https://discord.com/invite/VJRuU3bSxt
   securitySchemes:
     BearerAuth:
       type: http
